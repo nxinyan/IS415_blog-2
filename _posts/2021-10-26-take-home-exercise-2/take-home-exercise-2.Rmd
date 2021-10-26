@@ -1,0 +1,514 @@
+---
+title: "Take Home Exercise 2"
+description: |
+  In this Take-home Exericse, (A) an investigation will be conducted to see if the distribution of Airbnb listings is affected by location factors and (B) analyse the impact of COVID-19 on Airbnb business in Singapore by comparing Airbnb listings data on June 2019 and June 2021.
+author:
+  - name: Ngah Xin Yan
+    url: https://github.com/nxinyan/
+date: 09-26-2021
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      eval = TRUE,
+                      message = FALSE,
+                      warning = FALSE,
+                      fig.retina = 3)
+```
+
+## Overview
+
+The 'sharing economy' has seen unparalleled growth in terms of number of users, making it possible for new methods of economic and social interactions. 
+
+Airbnb, once belonging to the sharing economy, has expanded into many cities across many countries and successfully transitioned into profitability, showing the valid validity of sharing economy within the global market.
+
+Singapore has yet to legalise short-term rentals offered by platforms such as Airbnb. However, there are datasets for Airbnb listing in Singapore.
+
+## Objective
+### Section A: Airbnb Distribution
+
+To investigate if the distribution of Airbnb listings are affected by location factors 
+
+### Section B: Impact of COVID-19
+
+To analyse the impact of COVID-19 on Airbnb business in Singapore by comparing Airbnb listings data on June 2019 and June 2021.
+
+## Data Used
+
+- **Airbnb Listing (June 2019)**: Singapore's Airbnb listing for 2019 (csv file) from [Inside Airbnb](http://insideairbnb.com/get-the-data.html)
+- **Airbnb Listing (July 2021)**: Singapore's Airbnb listing for 2021 (csv file) from [Inside Airbnb](http://insideairbnb.com/get-the-data.html)
+- **Hotels**: Listing of hotels in Singapore (csv file) from [OneMap API](https://cran.r-project.org/web/packages/onemapsgapi/index.html)
+- **Tourism**: List of tourist attraction in Singapore (csv file) from [OneMap API](https://cran.r-project.org/web/packages/onemapsgapi/index.html)
+- **CostalOutline**: National Boundary of Singapore (shp file) from [data.gov.sg](https://data.gov.sg/dataset/national-map-polygon)
+- **MP14_SUBZONE_WEB_PL**: URA 2014 Master Plan Planning Subzone Boundary Data (shp file) from [data.gov.sg](https://data.gov.sg/dataset/master-plan-2014-subzone-boundary-web)
+- **MRTLRTStnPtt**: All MRT and LRT stations in Singapore (shp file) from [LTA Datamall](https://datamall.lta.gov.sg/content/datamall/en/search_datasets.html?searchText=mrt)
+
+
+## Installing and Loading the R packages
+
+- **sf**: used to import, manage and process vector-based geospatial data in R.
+
+- [**spatstat**](https://spatstat.org/): for point pattern analysis.
+
+- [**raster**](https://cran.r-project.org/web/packages/raster/): reads, writes, manipulates, analyses and model of gridded spatial data.
+
+- [**maptools**](https://cran.r-project.org/web/packages/maptools/index.html): provides a set of tools for manipulating geographic data.
+
+- [**tmap**](https://cran.r-project.org/web/packages/tmap/index.html): to plot cartographic quality static point patterns maps or interactive maps by using leaflet API.
+
+- **tidyverse**: to perform data science tasks such as importing, wrangling and visualising data
+
+```{r}
+packages = c('maptools', 'sf', 'raster','spatstat', 'tmap','tidyverse','rgdal','ggplot2', 'ggthemes', 'plotly')
+for (p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p,character.only = T)
+}
+```
+
+## Data Extraction, Wrangling and Integration
+### Importing Geospatial Data
+
+Importing the following geospatial dataset into R by using *st_read()* of **sf** package
+
+**`MP14_SUBZONE_WEB_PL`**
+
+```{r}
+mpsz = st_read(dsn = "data/geospatial", 
+                  layer = "MP14_SUBZONE_WEB_PL")
+```
+
+**`CostalOutline`**
+
+```{r}
+sg <- st_read(dsn = "data/geospatial", layer="CostalOutline")
+```
+
+**`MRTLRTStnPtt`**
+
+```{r}
+mrtlrt <- st_read(dsn = "data/geospatial", layer="MRTLRTStnPtt")
+```
+The projected CRS of all the data frames are SVY21, which is relevant for analysis in Singapore. However, the EPSG code should be checked as when importing geospatial data into R, the coordinate system of the source data can go missing or be wrongly assigned.
+
+### Assigning EPSG code to a simple feature data frame
+
+```{r}
+st_crs(mpsz)
+```
+
+```{r}
+st_crs(sg)
+```
+
+```{r}
+st_crs(mrtlrt)
+```
+
+All data frames indicated that the EPSG code is 9001 which is wrong. The EPSG code for SVY21 is 3414.
+
+*st_crs(sg)* of **sf** package will be used to assign the correct EPSG code to all data frames.
+
+```{r}
+mpsz_sf <- st_transform(mpsz, 3414)
+```
+
+```{r}
+sg_sf <- st_transform(sg, 3414)
+```
+
+```{r}
+mrtlrt_sf <- st_transform(mrtlrt, 3414)
+```
+
+Checking CRS again
+
+```{r}
+st_crs(mpsz_sf)
+```
+
+```{r}
+st_crs(sg_sf)
+```
+
+```{r}
+st_crs(mrtlrt_sf)
+```
+
+All dataframes has the EPSG code of 3414 now.
+
+### Importing Aspatial Data 
+
+Importing the following aspatial dataset into R dataframe by using *read_csv()* function of **readr** package in **tidyverse**:
+
+```{r}
+airbnb_june2019 <- read_csv("data/aspatial/airbnb_june2019.csv")
+airbnb_july2021 <- read_csv("data/aspatial/airbnb_july2021.csv")
+hotels <- read_csv("data/aspatial/hotels.csv")
+tourism <- read_csv("data/aspatial/tourism.csv")
+```
+
+Use ***glimpse()*** to learn more about the attribute information in the data frame.
+
+```{r}
+glimpse(airbnb_june2019)
+```
+
+```{r}
+glimpse(airbnb_july2021)
+```
+
+```{r}
+glimpse(hotels)
+```
+
+```{r}
+glimpse(tourism)
+```
+
+***glimpse()*** report reveals the data type of each fields. 
+
+The ***latitude*** and ***longitude*** column are for the coordinates, which are in decimal degree format. There are also some dataset which uses ***LATITUDE***/***LONGITUDE*** and ***longitude***/***Lng*** columns instead, but it still shows the coordinates in decimal degree format. It is good to assume that the data is in **WGS84** . It has to be assigned to the correct coordinate system to match the geospatial data above.  
+
+### Pre-Processing of Data 
+**Dealing with Missing Values**
+
+Using the ***is.na()*** function, check for missing value in the ***latitude***/***Lat*** and ***longitude***/***Lng*** column.
+
+```{r}
+any(is.na(airbnb_june2019$latitude))
+any(is.na(airbnb_june2019$longitude))
+```
+
+```{r}
+any(is.na(airbnb_july2021$latitude))
+any(is.na(airbnb_july2021$longitude))
+```
+
+```{r}
+any(is.na(hotels$Lat))
+any(is.na(hotels$Lng))
+```
+
+```{r}
+any(is.na(tourism$LATITUDE))
+any(is.na(tourism$LONGTITUDE))
+```
+
+```{r}
+any(is.na(tourism$Lat))
+any(is.na(tourism$Lng))
+```
+
+There are no NA values for ***airbnb_june2019***, ***airbnb_july2021 ***, ***hotels *** dataset for Latitude and Longitude. However, for  ***tourism ***, there is missing value in its  ***LATITUDE*** and  ***Longtitude*** column. However, there is no missing value in its ***Lat*** and ***Lng*** column. Thus, the ***Lat*** and ***Lng*** column will be used to create the simple data frame instead.
+
+```{r}
+tourism <- tourism %>%
+            drop_na("LATITUDE")
+
+tourism <- tourism %>%
+            drop_na("LONGTITUDE")
+```
+
+### Transforming the projection of coordinate system
+
+All the data will be converted into simple feature data frame using ***st_as_sf()*** function. For the coords argument, ***longitude*** will be used as the x-coordinate and ***latitude*** will be the y-coordinate. WGS84 geographic coordinate system uses EPSG code 4326 but we have to match our geospatial data projected coordinate system. %<% is used to nest ***st_transform()*** trabsform the new simple feature data frame in SVY21 (EPSG: 3414) projected coordinates system. 
+
+```{r}
+airbnb_june2019_sf <- st_as_sf(airbnb_june2019, 
+                          coords = c("longitude", 
+                                     "latitude"), 
+                          crs = 4326) %>%
+  st_transform(crs=3414)
+```
+
+```{r}
+airbnb_july2021_sf <- st_as_sf(airbnb_july2021, 
+                          coords = c("longitude", 
+                                     "latitude"), 
+                          crs = 4326) %>%
+  st_transform(crs=3414)
+```
+
+```{r}
+hotels_sf <- st_as_sf(hotels, 
+                          coords = c("Lng", 
+                                     "Lat"), 
+                          crs = 4326) %>%
+  st_transform(crs=3414)
+```
+
+```{r}
+tourism_sf <- st_as_sf(tourism, 
+                          coords = c("LONGTITUDE", 
+                                     "LATITUDE"), 
+                          crs = 4326) %>%
+  st_transform(crs=3414)
+```
+
+Checking CRS again
+
+```{r}
+st_crs(airbnb_june2019_sf)
+st_crs(airbnb_july2021_sf)
+st_crs(hotels_sf)
+st_crs(tourism_sf)
+```
+
+All the data has successfully been changed to EPSG 3414.
+
+## Geospatial Data Wrangling
+
+Both geospatial and aspatial data will be converted from simple feature frame to sp's Spatial* class.
+
+### Converting sf data frames to sp’s Spatial* class
+
+*as_Spatial()* is used to convert the all the geospatial data from simple feature data frame to sp’s Spatial* class.
+
+```{r}
+mpsz <- as_Spatial(mpsz_sf)
+sg <- as_Spatial(sg_sf)
+mrtlrt <-as_Spatial(mrtlrt_sf)
+                    
+airbnb_june2019 <- as_Spatial(airbnb_june2019_sf)
+airbnb_july2021 <- as_Spatial(airbnb_july2021_sf)
+hotels <- as_Spatial(hotels_sf)
+tourism <- as_Spatial(tourism_sf)                    
+```
+
+Checking all the Spatial* class
+
+```{r}
+mpsz
+```
+
+```{r}
+sg
+```
+
+```{r}
+mrtlrt
+```
+
+```{r}
+airbnb_june2019
+```
+
+```{r}
+airbnb_july2021
+```
+
+```{r}
+hotels
+```
+
+```{r}
+tourism
+```
+
+All the geospatial data have been converted to their respective sp's Spatial* classes.
+
+### Converting the Spatial* class into generic sp format
+
+It is mandatory for the analytical data to be in ***ppp*** object form to use **spatstat**. Since there is no direct way to convert a Spatial* classes into ***ppp*** object, ***Spatial classes**** needs to be converted into ***Spatial*** object first.
+
+```{r}
+mpsz_sp <- as(mpsz, "SpatialPolygons")
+sg_sp <- as(sg, "SpatialPolygons")
+mrtlrt_sp <- as(mrtlrt, "SpatialPoints")
+
+airbnb_june2019_sp <- as(airbnb_june2019, "SpatialPoints")
+airbnb_july2021_sp <- as(airbnb_july2021, "SpatialPoints")
+hotels_sp <- as(hotels, "SpatialPoints")
+tourism_sp <- as(tourism, "SpatialPoints")
+```
+
+### Converting the generic sp format into spatstat’s ppp format
+
+*as.ppp()* function of **spatspat** is used to convert the spatial data into **spatstat**'s ***ppp*** object format.
+
+```{r}
+mrtlrt_ppp <- as(mrtlrt_sp, "ppp")
+airbnb_june2019_ppp <- as(airbnb_june2019_sp, "ppp")
+airbnb_july2021_ppp <- as(airbnb_july2021_sp, "ppp")
+hotels_ppp <- as(hotels_sp, "ppp")
+tourism_ppp <- as(tourism_sp, "ppp")
+```
+
+Taking a quick look at the summary statistics of the newly created **ppp** object with *summary()* 
+
+```{r}
+summary(mrtlrt_ppp)
+```
+
+```{r}
+summary(airbnb_june2019_ppp)
+```
+
+```{r}
+summary(airbnb_july2021_ppp)
+```
+
+```{r}
+summary(hotels_ppp)
+```
+
+```{r}
+summary(tourism_ppp)
+```
+
+From the summary above, there are 3 ppp objects that contains duplicated points: airbnb_june2019_ppp, airbnb_july2021_ppp, hotels_ppp and tourism_ppp
+
+### Handling Duplicated Points
+
+Checking for duplication in ***ppp*** object and the number of duplicated points
+
+```{r}
+any(duplicated(mrtlrt_ppp))
+sum(multiplicity(mrtlrt_ppp) > 1)
+```
+
+There are no duplicated points in mrtlrt_ppp. 
+
+```{r}
+any(duplicated(airbnb_june2019_ppp))
+sum(multiplicity(airbnb_june2019_ppp) > 1)
+```
+
+There are 6 duplicated points in *airbnb_june2019_ppp* as shown above.
+
+```{r}
+any(duplicated(airbnb_july2021_ppp))
+sum(multiplicity(airbnb_july2021_ppp) > 1)
+```
+
+There are 224 duplicated points in *airbnb_july2021_ppp* as shown above.
+
+```{r}
+any(duplicated(hotels_ppp))
+sum(multiplicity(hotels_ppp) > 1)
+```
+
+There are 10 duplicated points in *hotels_ppp* as shown above.
+
+```{r}
+any(duplicated(tourism_ppp))
+sum(multiplicity(tourism_ppp) > 1)
+```
+
+There are 7 duplicated points in *tourism_ppp* as shown above.
+
+### Jittering
+
+To overcome the problem of duplicates, *jittering* will be used. Jittering adds a small perturbation to the duplicate points so that they do not occupy the exact same space.
+
+```{r}
+airbnb_june2019_ppp_jit <- rjitter(airbnb_june2019_ppp, 
+                             retry=TRUE, 
+                             nsim=1, 
+                             drop=TRUE)
+```
+
+```{r}
+airbnb_july2021_ppp_jit <- rjitter(airbnb_july2021_ppp, 
+                             retry=TRUE, 
+                             nsim=1, 
+                             drop=TRUE)
+```
+
+```{r}
+hotels_ppp_jit <- rjitter(hotels_ppp, 
+                             retry=TRUE, 
+                             nsim=1, 
+                             drop=TRUE)
+```
+
+```{r}
+tourism_ppp_jit <- rjitter(tourism_ppp, 
+                             retry=TRUE, 
+                             nsim=1, 
+                             drop=TRUE)
+```
+
+Check for duplicated points again.
+
+```{r}
+any(duplicated(airbnb_june2019_ppp_jit))
+```
+
+```{r}
+any(duplicated(airbnb_july2021_ppp_jit))
+```
+
+```{r}
+any(duplicated(hotels_ppp_jit))
+```
+
+```{r}
+any(duplicated(tourism_ppp_jit))
+```
+
+There are no duplicated points after applying *jittering*.
+
+### Creation of *owin* object
+
+While analysing spatial point patterns, it is good to confine the analysis within a certain geographical area, which in this case will be Singapore boundary. ***owin*** in **spatstat** is specially designed to represent the polygonal region.
+
+```{r}
+sg_owin <- as(sg_sp, "owin")
+```
+
+Displaying the output object with the use of *plot()* function.
+
+```{r}
+plot(sg_owin)
+```
+
+Checking the summary of owin
+
+```{r}
+summary(sg_owin)
+```
+
+### Combining Point Events Object and owin object
+
+Extracting the relevant events located within Singapore.
+
+```{r}
+mrtlrt_sg_ppp = mrtlrt_ppp[sg_owin]
+airbnb_june2019_sg_ppp = airbnb_june2019_ppp_jit[sg_owin]
+airbnb_july2021_sg_ppp = airbnb_july2021_ppp_jit[sg_owin]
+hotels_sg_ppp = hotels_ppp_jit[sg_owin]
+tourism_sg_ppp = tourism_ppp_jit[sg_owin]
+```
+
+Visualisation of ***ppp*** objects 
+
+Using *plot()* function to visualise the ***ppp*** objects within Singapore's boundary
+
+```{r fig.width=12, fig.height=8}
+plot(mrtlrt_sg_ppp)
+```
+
+```{r fig.width=12, fig.height=8}
+plot(airbnb_june2019_sg_ppp)
+```
+
+```{r fig.width=12, fig.height=8}
+plot(airbnb_july2021_sg_ppp)
+```
+
+```{r fig.width=12, fig.height=8}
+plot(hotels_sg_ppp)
+```
+
+```{r fig.width=12, fig.height=8}
+plot(tourism_sg_ppp)
+```
+
