@@ -407,3 +407,519 @@ boxbreaks <- function(v,mult=1.5) {
   return(bb)
 }
 ```
+
+```{r echo=TRUE, eval=TRUE}
+boxmap <- function(vnam, df,
+                   legtitle=NA,
+                   mtitle="Box Map",
+                   mult=1.5){
+  var <- get.var(vnam,df)
+  bb <- boxbreaks(var)
+  tm_shape(dki_mar2020) +
+  tm_polygons() +
+  tm_shape(df) +
+    tm_fill(vnam,title=legtitle,
+    breaks=bb,
+    palette="Blues",
+  labels = c("lower outlier",
+             "< 25%",
+             "25% - 50%",
+             "50% - 75%",
+             "> 75%",
+             "upper outlier")) +
+  tm_borders() +
+  tm_layout(title = mtitle, 
+            title.position = c("right",
+                               "bottom"))
+}
+```
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_mar2020)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_mar2020)
+```
+### April 2020
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_apr2020)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_apr2020)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_apr2020)
+```
+
+```{r echo=TRUE, eval=TRUE}
+
+```
+
+### May 2020
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_may2020)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_may2020)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_may2020)
+```
+
+### June 2020
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_jun2020)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_jun2020)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_jun2020)
+```
+
+### Julu 2020
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_jul2020)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap(c("Cumulative Rate for Cases"), dki_jul2020)
+```
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_jul2020)
+```
+### August 2020
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_aug2020)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_aug2020)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_aug2020)
+```
+
+### September 2020
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_sep2020)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_sep2020)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_sep2020)
+```
+
+### October 2020
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_oct2020)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_oct2020)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_oct2020)
+```
+
+### November 2020
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_nov2020)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_nov2020)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_nov2020)
+```
+
+### December 2020
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_dec2020)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_dec2020)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_dec2020)
+```
+
+### January 2021
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_jan2021)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_jan2021)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_jan2021)
+```
+
+### February 2021
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_feb2021)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_feb2021)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_feb2021)
+```
+
+### March 2021
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_mar2021)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_mar2021)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_mar2021)
+```
+
+### April 2021
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_apr2021)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_apr2021)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_apr2021)
+```
+
+### May 2021
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_may2021)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_may2021)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_may2021)
+```
+
+### June 2021
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_jun2021)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_jun2021)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_jun2021)
+```
+
+### July 2021
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_jul2021)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - April 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Cases", dki_jul2021)
+```   
+
+```{r echo=TRUE, eval=TRUE}
+boxmap("Cumulative Rate for Deaths", dki_jul2021)
+```
