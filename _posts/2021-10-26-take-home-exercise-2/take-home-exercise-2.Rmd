@@ -512,3 +512,603 @@ plot(hotels_sg_ppp)
 plot(tourism_sg_ppp)
 ```
 
+# Section A: Airbnb Distribution in 2019
+
+## Exploratory Spatial Data Analysis
+
+- Derive kernel density maps of Airbnb listings, hotels, MRT services, and tourist attractions.
+
+- Using appropriate tmap functions, display the kernel density maps on openstreetmap of Singapore. Describe the spatial patterns revealed by the kernel density maps. Highlight the advantage of kernel density map over point map.
+
+### Airbnb Listing June 2019
+
+#### **Computing kernel density estimation using automatic bandwidth selection method**
+
+Computing kernel density using *density()* of **spatstat** using *bw.diggle()*, a automatic bandwidth selection method. The default smoothing kernel is *gaussian*.
+
+There are other bandwidth selection method such as *bw.ppl()* but I chosen to use *bw.diggle()* as it can identify single tight cluster patterns among random noise.
+
+```{r}
+kde_airbnb_june2019_sg_bw <- density(airbnb_june2019_sg_ppp,
+                                   sigma=bw.diggle,
+                                   edge=TRUE,
+                                   kernel="gaussian")
+```
+
+```{r}
+plot(kde_airbnb_june2019_sg_bw)
+```
+
+After looking at the first graph, I realised the output value range is too small to comprehend. This is due to the default unit of measurement of svy21 in meter. Thus, it was computed in “number of points per square meter”.
+
+#### **Rescalling KDE values to km(kilometer)**
+
+```{r}
+airbnb_june2019_sg_ppp_km <- rescale(airbnb_june2019_sg_ppp, 1000, 'km')
+```
+
+Now, the code can be re-run to get a better comprehension.
+
+```{r}
+kde_airbnb_june2019_sg_bw <- density(airbnb_june2019_sg_ppp_km,
+                                   sigma=bw.diggle,
+                                   edge=TRUE,
+                                   kernel="gaussian")
+```
+
+#### **Plotting of Kernel Density Estimation Maps**
+
+```{r fig.width=12, fig.height=8}
+par(mfrow=c(1,2))
+plot(kde_airbnb_june2019_sg_bw,  main = "KDE Map")
+plot(airbnb_june2019_sg_ppp_km,  main = "Point Map")
+```
+Analysis: It can be seen that the Airbnb listings are mostly situated in the south-east region close to the central area. This can seen by the higher density in the map shown by the pink spots in the kernel density estimation map
+
+Advantage of using kernel density map: Using the KDE map, the different shades of colour helps to visualise the density better as compared to point map. Point map only can only show the location of one place at the time, if too clustered together, it will just appear as a black patch and we would not be able to tell anything from it.
+
+#### Converting KDE output into grid object.
+
+Converting it so that it is suitable for mapping purposes.
+
+```{r}
+gridded_kde_airbnb_june2019_sg_bw <- as.SpatialGridDataFrame.im(kde_airbnb_june2019_sg_bw)
+spplot(gridded_kde_airbnb_june2019_sg_bw)
+```
+
+The density map using grid shows a better visualisation of the listings as it is more visible to see those that are less clustered together as shown with the lighter shade of blue.
+
+```{r}
+kde_airbnb_june2019_sg_bw_m <- density(airbnb_june2019_sg_ppp,
+                                   sigma=bw.diggle,
+                                   edge=TRUE,
+                                   kernel="gaussian")
+```
+
+```{r}
+gridded_kde_airbnb_june2019_sg_bw_m <- as.SpatialGridDataFrame.im(kde_airbnb_june2019_sg_bw_m)
+```
+
+
+#### **CONVERTING GRIDDED OUTPUT INTO RASTER**
+
+Converting the gridded kernal density objects into RasterLayer object by using raster() of **raster** package.
+
+```{r}
+kde_airbnb_june2019_bw_raster <- raster(gridded_kde_airbnb_june2019_sg_bw_m)
+kde_airbnb_june2019_bw_raster
+```
+The crs property is NA as shown above.
+
+#### **ASSIGNING PROJECTION SYSTEMS** display the kernel density maps on openstreetmap of Singapore
+
+Assigning the CRS information on kde_airbnb_june2019_bw_raster Raster Layer
+
+```{r}
+projection(kde_airbnb_june2019_bw_raster) <- CRS("+init=EPSG:3414")
+kde_airbnb_june2019_bw_raster
+```
+
+The CRS property is now available.
+
+Plotting the raster layer on openstreetmap using interactive mode
+
+```{r}
+tmap_mode("view")
+tm_basemap("OpenStreetMap") +
+tm_shape(kde_airbnb_june2019_bw_raster) + 
+  tm_raster("v", palette = "Purples", alpha = 0.7)
+```
+
+Analysis: From the interactive map above, Airbnb can be seen in areas around Geylang which has a highest density of 0.00015 to 0.00020 units per square meter with the darkest shade of purple. Following that will be areas around Chinatown and Clarke Quay with a higher density of 0.00010 to 0.00015 units per square meter shown with the darker shade of purple.
+
+
+### Hotels
+
+#### **Rescalling KDE values to km(kilometer)**
+
+```{r}
+hotels_sg_ppp_km <- rescale(hotels_sg_ppp, 1000, 'km')
+```
+
+```{r}
+kde_hotels_sg_bw <- density(hotels_sg_ppp_km,
+                                   sigma=bw.diggle,
+                                   edge=TRUE,
+                                   kernel="gaussian")
+```
+
+#### **Plotting of Kernel Density Estimation Maps**
+
+```{r fig.width=12, fig.height=8}
+par(mfrow=c(1,2))
+plot(kde_hotels_sg_bw,  main = "KDE Map")
+plot(hotels_sg_ppp_km,  main = "Point Map")
+```
+
+#### Converting KDE output into grid object.
+
+Converting it so that it is suitable for mapping purposes.
+
+```{r}
+gridded_kde_hotels_sg_bw <- as.SpatialGridDataFrame.im(kde_hotels_sg_bw)
+spplot(gridded_kde_hotels_sg_bw)
+```
+
+The density map using grid shows a better visualisation of the listings as it is more visible to see those that are less clustered together as shown with the lighter shade of blue.
+
+```{r}
+kde_hotels_sg_bw_m <- density(hotels_sg_ppp,
+                                   sigma=bw.diggle,
+                                   edge=TRUE,
+                                   kernel="gaussian")
+```
+
+```{r}
+gridded_kde_hotels_sg_bw_m <- as.SpatialGridDataFrame.im(kde_hotels_sg_bw_m)
+```
+
+#### **CONVERTING GRIDDED OUTPUT INTO RASTER**
+
+Converting the gridded kernal density objects into RasterLayer object by using raster() of **raster** package.
+
+```{r}
+kde_hotels_bw_raster <- raster(gridded_kde_hotels_sg_bw_m)
+kde_hotels_bw_raster
+```
+The crs property is NA as shown above.
+
+#### **ASSIGNING PROJECTION SYSTEMS** display the kernel density maps on openstreetmap of Singapore
+
+Assigning the CRS information on kde_airbnb_june2019_bw_raster Raster Layer
+
+```{r}
+projection(kde_hotels_bw_raster) <- CRS("+init=EPSG:3414")
+kde_hotels_bw_raster
+```
+
+The CRS property is now available.
+
+Plotting the raster layer on openstreetmap using interactive mode
+
+```{r}
+tmap_mode("view")
+tm_basemap("OpenStreetMap") +
+tm_shape(kde_hotels_bw_raster) + 
+  tm_raster("v", palette = "Purples", alpha = 0.7)
+```
+
+Analysis: From the interactive map above, hotels can be seen that areas around Geylang and Clarke Quay has a highest density of 0.00015 to 0.00020 units per square meter. Following that will be areas around Lavender and Rocher with a higher density of hotel ranging from 0.00010 to 0.00015 units per square meter.
+
+
+### MRT and LRT
+
+#### **Rescalling KDE values to km(kilometer)**
+
+```{r}
+mrtlrt_sg_ppp_km <- rescale(mrtlrt_sg_ppp, 1000, 'km')
+```
+
+```{r}
+kde_mrtlrt_sg_bw <- density(mrtlrt_sg_ppp_km,
+                                   sigma=bw.diggle,
+                                   edge=TRUE,
+                                   kernel="gaussian")
+```
+
+#### **Plotting of Kernel Density Estimation Maps**
+
+```{r fig.width=12, fig.height=8}
+par(mfrow=c(1,2))
+plot(kde_mrtlrt_sg_bw,  main = "KDE Map")
+plot(mrtlrt_sg_ppp_km,  main = "Point Map")
+```
+
+#### Converting KDE output into grid object.
+
+Converting it so that it is suitable for mapping purposes.
+
+```{r}
+gridded_kde_mrtlrt_sg_bw <- as.SpatialGridDataFrame.im(kde_mrtlrt_sg_bw)
+spplot(gridded_kde_mrtlrt_sg_bw)
+```
+
+The density map using grid shows a better visualisation of the listings as it is more visible to see those that are less clustered together as shown with the lighter shade of blue.
+
+```{r}
+kde_mrtlrt_sg_bw_m <- density(mrtlrt_sg_ppp,
+                                   sigma=bw.diggle,
+                                   edge=TRUE,
+                                   kernel="gaussian")
+```
+
+```{r}
+gridded_kde_mrtlrt_sg_bw_m <- as.SpatialGridDataFrame.im(kde_mrtlrt_sg_bw_m)
+```
+
+#### **CONVERTING GRIDDED OUTPUT INTO RASTER**
+
+Converting the gridded kernal density objects into RasterLayer object by using raster() of **raster** package.
+
+```{r}
+kde_mrtlrt_bw_raster <- raster(gridded_kde_mrtlrt_sg_bw_m)
+kde_mrtlrt_bw_raster
+```
+The crs property is NA as shown above.
+
+#### **ASSIGNING PROJECTION SYSTEMS** display the kernel density maps on openstreetmap of Singapore
+
+Assigning the CRS information on kde_airbnb_june2019_bw_raster Raster Layer
+
+```{r}
+projection(kde_mrtlrt_bw_raster) <- CRS("+init=EPSG:3414")
+kde_mrtlrt_bw_raster
+```
+
+The CRS property is now available.
+
+Plotting the raster layer on openstreetmap using interactive mode
+
+```{r}
+tmap_mode("view")
+tm_basemap("OpenStreetMap") +
+tm_shape(kde_mrtlrt_bw_raster) + 
+  tm_raster("v", palette = "Purples", alpha = 0.7)  
+```
+
+Analysis: From the interactive map above, we can see that North-west, North-east and South-Central area has a higher density of MRT and LRT station, ranging 0.0000020 to 0.0000030.
+
+
+### Tourist Attractions
+
+#### **Rescalling KDE values to km(kilometer)**
+
+```{r}
+tourism_sg_ppp_km <- rescale(tourism_sg_ppp, 1000, 'km')
+```
+
+```{r}
+kde_tourism_sg_bw <- density(tourism_sg_ppp_km,
+                                   sigma=bw.diggle,
+                                   edge=TRUE,
+                                   kernel="gaussian")
+```
+
+#### **Plotting of Kernel Density Estimation Maps**
+
+```{r fig.width=12, fig.height=8}
+par(mfrow=c(1,2))
+plot(kde_tourism_sg_bw,  main = "KDE Map")
+plot(tourism_sg_ppp_km,  main = "Point Map")
+```
+
+#### Converting KDE output into grid object.
+
+Converting it so that it is suitable for mapping purposes.
+
+```{r}
+gridded_kde_tourism_sg_bw <- as.SpatialGridDataFrame.im(kde_tourism_sg_bw)
+spplot(gridded_kde_tourism_sg_bw)
+```
+
+The density map using grid shows a better visualisation of the listings as it is more visible to see those that are less clustered together as shown with the lighter shade of blue.
+
+```{r}
+kde_tourism_sg_bw_m <- density(tourism_sg_ppp,
+                                   sigma=bw.diggle,
+                                   edge=TRUE,
+                                   kernel="gaussian")
+```
+
+```{r}
+gridded_kde_tourism_sg_bw_m <- as.SpatialGridDataFrame.im(kde_tourism_sg_bw_m)
+```
+
+#### **CONVERTING GRIDDED OUTPUT INTO RASTER**
+
+Converting the gridded kernal density objects into RasterLayer object by using raster() of **raster** package.
+
+```{r}
+kde_tourism_bw_raster <- raster(gridded_kde_tourism_sg_bw_m)
+kde_tourism_bw_raster
+```
+The crs property is NA as shown above.
+
+#### **ASSIGNING PROJECTION SYSTEMS** display the kernel density maps on openstreetmap of Singapore
+
+Assigning the CRS information on kde_airbnb_june2019_bw_raster Raster Layer
+
+```{r}
+projection(kde_tourism_bw_raster) <- CRS("+init=EPSG:3414")
+kde_tourism_bw_raster
+```
+
+The CRS property is now available.
+
+Plotting the raster layer on openstreetmap using interactive mode
+
+```{r}
+tmap_mode("view")
+tm_basemap("OpenStreetMap") +
+tm_shape(kde_tourism_bw_raster) + 
+  tm_raster("v", palette = "Purples", alpha = 0.7)  
+```
+
+Analysis: There is high concentration of tourist attractions in the south-central, with a high density of 0.000015 to 0.000020.
+
+### Comparing Spatial Point Patterns using KDE
+
+The areas we will look into will be Anson, Bugis, Chinatown and Geylang as there are higher density of Airbnb
+
+#### **EXTRACTING STUDY AREA**
+
+```{r}
+downtown = mpsz[mpsz@data$PLN_AREA_N == "DOWNTOWN CORE",] #for Anson
+rochor = mpsz[mpsz@data$PLN_AREA_N == "ROCHOR",] # for Bugis
+outram = mpsz[mpsz@data$PLN_AREA_N == "OUTRAM",] # for Chinatown
+geylang = mpsz[mpsz@data$PLN_AREA_N == "GEYLANG",] # for Geylang
+
+```
+
+Plotting target planning areas
+
+```{r}
+par(mfrow=c(2,2))
+plot(downtown, main = "Downtown")
+plot(rochor, main = "Rochor")
+plot(outram, main = "Outram")
+plot(geylang, main = "Geylang")
+```
+
+#### **CONVERTING THE SPATIAL POINT DATA FRAME INTO GENERIC SP FORMAT**
+
+Converting SpatialPolygonsDataFrame layers into generic spatialpolygons layers.
+
+```{r}
+downtown_sp = as(downtown, "SpatialPolygons")
+rochor_sp = as(rochor, "SpatialPolygons")
+outram_sp = as(outram, "SpatialPolygons")
+geylang_sp = as(geylang, "SpatialPolygons")
+```
+
+#### **CREATING OWIN OBJECT**
+
+Converting SpatialPolygons objects into owin objects that is required by **spatstat**
+
+```{r}
+downtown_owin = as(downtown_sp, "owin")
+rochor_owin = as(rochor_sp, "owin")
+outram_owin = as(outram_sp, "owin")
+geylang_owin = as(geylang_sp, "owin")
+```
+
+#### **COMBINING AIRBNB JUNE 2019, HOTELS, MRTLRT, TOURISM POINTS AND THE STUDY AREA**
+
+```{r}
+airbnb_june2019_downtown_ppp = airbnb_june2019_ppp_jit[downtown_owin]
+airbnb_june2019_rochor_ppp = airbnb_june2019_ppp_jit[rochor_owin]
+airbnb_june2019_outram_ppp = airbnb_june2019_ppp_jit[outram_owin]
+airbnb_june2019_geylang_ppp = airbnb_june2019_ppp_jit[geylang_owin]
+
+hotels_downtown_ppp = hotels_ppp_jit[downtown_owin]
+hotels_rochor_ppp = hotels_ppp_jit[rochor_owin]
+hotels_outram_ppp = hotels_ppp_jit[outram_owin]
+hotels_geylang_ppp = hotels_ppp_jit[geylang_owin]
+
+mrtlrt_downtown_ppp = mrtlrt_ppp[downtown_owin]
+mrtlrt_rochor_ppp = mrtlrt_ppp[rochor_owin]
+mrtlrt_outram_ppp = mrtlrt_ppp[outram_owin]
+mrtlrt_geylang_ppp = mrtlrt_ppp[geylang_owin]
+
+tourism_downtown_ppp = tourism_ppp_jit[downtown_owin]
+tourism_rochor_ppp = tourism_ppp_jit[rochor_owin]
+tourism_outram_ppp = tourism_ppp_jit[outram_owin]
+tourism_geylang_ppp = tourism_ppp_jit[geylang_owin]
+```
+
+Next, rescale() function is used to trasnform the unit of measurement from metre to kilometre
+
+```{r}
+airbnb_june2019_downtown_ppp_km = rescale(airbnb_june2019_downtown_ppp, 1000, "km")
+airbnb_june2019_rochor_ppp_km = rescale(airbnb_june2019_rochor_ppp, 1000, "km")
+airbnb_june2019_outram_ppp_km = rescale(airbnb_june2019_outram_ppp, 1000, "km")
+airbnb_june2019_geylang_ppp_km = rescale(airbnb_june2019_geylang_ppp, 1000, "km")
+
+hotels_downtown_ppp_km = rescale(hotels_downtown_ppp, 1000, "km")
+hotels_rochor_ppp_km = rescale(hotels_rochor_ppp, 1000, "km")
+hotels_outram_ppp_km = rescale(hotels_outram_ppp, 1000, "km")
+hotels_geylang_ppp_km = rescale(hotels_geylang_ppp, 1000, "km")
+
+mrtlrt_downtown_ppp_km = rescale(mrtlrt_downtown_ppp, 1000, "km")
+mrtlrt_rochor_ppp_km = rescale(mrtlrt_rochor_ppp, 1000, "km")
+mrtlrt_outram_ppp_km = rescale(mrtlrt_outram_ppp, 1000, "km")
+mrtlrt_geylang_ppp_km = rescale(mrtlrt_geylang_ppp, 1000, "km")
+
+tourism_downtown_ppp_km = rescale(tourism_downtown_ppp, 1000, "km")
+tourism_rochor_ppp_km = rescale(tourism_rochor_ppp, 1000, "km")
+tourism_outram_ppp_km = rescale(tourism_outram_ppp, 1000, "km")
+tourism_geylang_ppp_km = rescale(tourism_geylang_ppp, 1000, "km")
+```
+
+#### **Airbnb June 2019** 
+
+COMPUTING IDE
+
+```{r fig.width=8, fig.height=6}
+par(mfrow=c(2,2))
+plot(density(airbnb_june2019_downtown_ppp_km, 
+             sigma=bw.diggle, 
+             edge=TRUE, 
+             kernel="gaussian"),
+     main="Downtown")
+plot(density(airbnb_june2019_rochor_ppp_km, 
+             sigma=bw.diggle, 
+             edge=TRUE, 
+             kernel="gaussian"),
+     main="Rochor")
+plot(density(airbnb_june2019_outram_ppp_km, 
+             sigma=bw.diggle, 
+             edge=TRUE, 
+             kernel="gaussian"),
+     main="Outram")
+plot(density(airbnb_june2019_geylang_ppp, 
+             sigma=bw.diggle, 
+             edge=TRUE, 
+             kernel="gaussian"),
+     main="Geylang")
+```
+
+#### **Are Airbnb listings are affected by location factors?**
+
+**DOWNTOWN**
+
+```{r fig.width=8, fig.height=6}
+par(mfrow=c(2,2))
+plot(airbnb_june2019_downtown_ppp_km, main = "Airbnb")
+plot(hotels_downtown_ppp_km, main = "Hotel")
+plot(mrtlrt_downtown_ppp_km, main = "MRT and LRT")
+plot(tourism_downtown_ppp_km, main = "Tourist Attraction")
+```
+
+Analysis: Even though there are many hotels in the vicinity, there are more Airbnb as compared to hotels. It could be due to easy accessibility to many MRT stations and tourist attractions in the vicinity.
+
+**ROCHOR**
+
+```{r fig.width=8, fig.height=6}
+par(mfrow=c(2,2))
+plot(airbnb_june2019_rochor_ppp_km, main = "Airbnb")
+plot(hotels_rochor_ppp_km, main = "Hotel")
+plot(mrtlrt_rochor_ppp_km, main = "MRT and LRT")
+plot(tourism_rochor_ppp_km, main = "Tourist Attraction")
+```
+
+Analysis: Even though there are many hotels in the Rochor, there are also many Airbnb as compared to hotels. It could be due to easy accessibility to many MRT stations nearby and tourist attractions in the vicinity.
+
+**OUTRAM**
+
+```{r fig.width=8, fig.height=6}
+par(mfrow=c(2,2))
+plot(airbnb_june2019_outram_ppp_km, main = "Airbnb")
+plot(hotels_outram_ppp_km, main = "Hotel")
+plot(mrtlrt_outram_ppp_km, main = "MRT and LRT")
+plot(tourism_outram_ppp_km, main = "Tourist Attraction")
+```
+
+Analysis: Even though there are many hotels in the Rochor, there is more Airbnb as compared to hotels. However, there is very little MRT station and some tourist attractions in the vicinity.
+
+**GEYLANG**
+
+```{r fig.width=8, fig.height=6}
+par(mfrow=c(2,2))
+plot(airbnb_june2019_geylang_ppp_km, main = "Airbnb")
+plot(hotels_geylang_ppp_km, main = "Hotel")
+plot(mrtlrt_geylang_ppp_km, main = "MRT and LRT")
+plot(tourism_geylang_ppp_km, main = "Tourist Attraction")
+```
+
+Analysis: There are many Airbnb in this area, with very little hotels nearby. It is quite accessible to MRT Stations but there is only one tourist attraction in the vicinity.
+
+Overall: Even though the numbers of hotel in thee vicinity is high, there are still many Airbnb listing in all the areas. Every location was very accessible to MRT stations except Outram, but it didnt affect the number of Airbnb in the area. The same goes for tourist attractions, except for Geylang which only have one tourist attraction, but it did not affect the number of Airbnb in the area as well.
+
+## Second-order Spatial Point Patterns Analysis
+
+- Formulate the null hypothesis and alternative hypothesis and select the confidence level.
+
+- Perform the test by using appropriate Second order spatial point patterns analysis technique.
+
+- With reference to the analysis results, draw statistical conclusions.
+
+### Nearest Neighbour Analysis
+
+Perform the Clark-Evans test of aggregation for a spatial point pattern by using *clarkevans.test()* of **statspat**.
+
+The test hypotheses are:
+
+Ho = The distribution of Airbnb listings are randomly distributed.
+
+H1= The distribution of Airbnb listings are not randomly distributed.
+
+The 95% confident interval will be used.
+
+### Testing spatial point patterns using Clark and Evans Test
+
+```{r}
+clarkevans.test(airbnb_june2019_sg_ppp,
+                correction="none",
+                clipregion="sg_owin",
+                alternative=c("clustered"),
+                nsim=99)
+```
+
+Analysis: The distribution of Airbnb in Singapore is found to be clustered as the R = 0.36 is < 1. The null hypothesis is rejected as the p-value = 0.01 is smaller than 0.05.
+
+#### Clark and Evans Test: Downtown
+
+```{r}
+clarkevans.test(airbnb_june2019_downtown_ppp,
+                correction="none",
+                clipregion=NULL,
+                alternative=c("two.sided"),
+                nsim=999)
+```
+
+Analysis: The null hypothesis is rejected as the p-value = 0.002 is smaller than 0.05, showing that the Airbnb Listings in Downtown are not randomly distributed.
+
+#### Clark and Evans Test: Rochor
+
+```{r}
+clarkevans.test(airbnb_june2019_rochor_ppp,
+                correction="none",
+                clipregion=NULL,
+                alternative=c("two.sided"),
+                nsim=999)
+```
+
+Analysis: The null hypothesis is rejected as the p-value = 0.002 is smaller than 0.05, showing that the Airbnb Listings in Rochor are not randomly distributed.
+
+#### Clark and Evans Test: Outram
+
+```{r}
+clarkevans.test(airbnb_june2019_outram_ppp,
+                correction="none",
+                clipregion=NULL,
+                alternative=c("two.sided"),
+                nsim=999)
+```
+
+Analysis: The null hypothesis is rejected as the p-value = 0.002 is smaller than 0.05, showing that the Airbnb Listings in Outram are not randomly distributed.
+
+#### Clark and Evans Test: Geylang
+
+```{r}
+clarkevans.test(airbnb_june2019_geylang_ppp,
+                correction="none",
+                clipregion=NULL,
+                alternative=c("two.sided"),
+                nsim=999)
+```
+
+Analysis: The null hypothesis is rejected as the p-value = 0.002 is smaller than 0.05, showing that the Airbnb Listings in Geylang are not randomly distributed.
+
+Overall: ALl the areas shows that the Airbnb listing are not randomly distributed. AS Rochor and Outram has R value nearer to 1, we will focus on those 2 areas for further analysis.
+
