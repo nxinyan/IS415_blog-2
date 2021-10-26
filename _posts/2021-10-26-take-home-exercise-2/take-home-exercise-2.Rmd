@@ -1589,3 +1589,1030 @@ kde_airbnb_july2021_hotelroom_bw <- density(airbnb_july2021_hotelroom_ppp_sg,
                               edge=TRUE,
                             kernel="gaussian")
 ```
+
+#### Converting KDE output into grid object
+
+```{r}
+gridded_kde_airbnb_june2019_private_bw <- as.SpatialGridDataFrame.im(kde_airbnb_june2019_private_bw)
+gridded_kde_airbnb_june2019_home_bw <- as.SpatialGridDataFrame.im(kde_airbnb_june2019_home_bw)
+gridded_kde_airbnb_june2019_share_bw <- as.SpatialGridDataFrame.im(kde_airbnb_june2019_share_bw)
+gridded_kde_airbnb_july2021_private_bw <- as.SpatialGridDataFrame.im(kde_airbnb_july2021_private_bw)
+gridded_kde_airbnb_july2021_home_bw <- as.SpatialGridDataFrame.im(kde_airbnb_july2021_home_bw)
+gridded_kde_airbnb_july2021_share_bw <- as.SpatialGridDataFrame.im(kde_airbnb_july2021_share_bw)
+gridded_kde_airbnb_july2021_hotelroom_bw <- as.SpatialGridDataFrame.im(kde_airbnb_july2021_hotelroom_bw)
+```
+
+#### Converting grid object into raster and assign project system
+
+```{r}
+kde_airbnb_june2019_private_bw_raster <- raster(gridded_kde_airbnb_june2019_private_bw)
+projection(kde_airbnb_june2019_private_bw_raster) <- CRS("+init=EPSG:3414")
+
+kde_airbnb_june2019_home_bw_raster <- raster(gridded_kde_airbnb_june2019_home_bw)
+projection(kde_airbnb_june2019_home_bw_raster) <- CRS("+init=EPSG:3414")
+
+kde_airbnb_june2019_share_bw_raster <- raster(gridded_kde_airbnb_june2019_share_bw)
+projection(kde_airbnb_june2019_share_bw_raster) <- CRS("+init=EPSG:3414")
+
+kde_airbnb_july2021_private_bw_raster <- raster(gridded_kde_airbnb_july2021_private_bw)
+projection(kde_airbnb_july2021_private_bw_raster) <- CRS("+init=EPSG:3414")
+
+kde_airbnb_july2021_home_bw_raster <- raster(gridded_kde_airbnb_july2021_home_bw)
+projection(kde_airbnb_july2021_home_bw_raster) <- CRS("+init=EPSG:3414")
+
+kde_airbnb_july2021_share_bw_raster <- raster(gridded_kde_airbnb_july2021_share_bw)
+projection(kde_airbnb_july2021_share_bw_raster) <- CRS("+init=EPSG:3414")
+
+kde_airbnb_july2021_hotelroom_bw_raster <- raster(gridded_kde_airbnb_july2021_hotelroom_bw)
+projection(kde_airbnb_july2021_hotelroom_bw_raster) <- CRS("+init=EPSG:3414")
+```
+
+#### Comparing Room Type and Year with KDE Map
+
+##### **Private Room**
+
+Plotting the raster layer on openstreetmap using interactive mode
+
+```{r}
+tmap_mode("view")
+
+airbnb_private_2019_map <- tm_basemap("OpenStreetMap") +
+  tm_shape(kde_airbnb_june2019_private_bw_raster) + 
+  tm_raster("v", palette = "Purples", alpha = 0.7)
+
+airbnb_private_2021_map <- tm_basemap("OpenStreetMap") +
+  tm_shape(kde_airbnb_july2021_private_bw_raster) + 
+  tm_raster("v", palette = "Purples", alpha = 0.7)
+
+tmap_arrange(airbnb_private_2019_map, airbnb_private_2021_map)
+
+tmap_mode("plot")
+```
+Analysis: Chinatown has the most amount of private rooms in 2019. Chinatown density drops in 2021, however there are new areas such as areas near Geylang with a higher density.
+
+##### **Entire Home/Apt**
+
+Plotting the raster layer on openstreetmap using interactive mode
+
+```{r}
+tmap_mode("view")
+
+airbnb_home_2019_map <- tm_basemap("OpenStreetMap") +
+  tm_shape(kde_airbnb_june2019_home_bw_raster) + 
+  tm_raster("v", palette = "Purples", alpha = 0.7)
+
+airbnb_home_2021_map <- tm_basemap("OpenStreetMap") +
+  tm_shape(kde_airbnb_july2021_home_bw_raster) + 
+  tm_raster("v", palette = "Purples", alpha = 0.7)
+
+tmap_arrange(airbnb_home_2019_map, airbnb_home_2021_map)
+
+tmap_mode("plot")
+```
+
+Analysis: There are significantly more entire home/apt in 2021 as compared to 2019
+
+##### **Sharing Room**
+
+Plotting the raster layer on openstreetmap using interactive mode
+
+```{r}
+tmap_mode("view")
+
+airbnb_share_2019_map <- tm_basemap("OpenStreetMap") +
+  tm_shape(kde_airbnb_june2019_share_bw_raster) + 
+  tm_raster("v", palette = "Purples", alpha = 0.7)
+
+airbnb_share_2021_map <- tm_basemap("OpenStreetMap") +
+  tm_shape(kde_airbnb_july2021_share_bw_raster) + 
+  tm_raster("v", palette = "Purples", alpha = 0.7)
+
+tmap_arrange(airbnb_share_2019_map, airbnb_share_2021_map)
+
+tmap_mode("plot")
+```
+
+Analysis:  Clarke Quay is the area with the highest density for shared room type in 2019. However, in 2021, the shared rooms are more spread out.
+
+##### **Hotel Rooms**
+
+Plotting the raster layer on openstreetmap using interactive mode
+
+```{r}
+tmap_mode("view")
+
+tm_basemap("OpenStreetMap") +
+  tm_shape(kde_airbnb_july2021_hotelroom_bw_raster) + 
+  tm_raster("v", palette = "Purples", alpha = 0.7)
+
+tmap_mode("plot")
+```
+
+Analysis: This is a newly added room type in 2021, with most of the hotel rooms listed in Clarke Quay.
+
+Overall: There were significant changes between 2019 and 2021, some density increased while some decreased. As all the room types are mainly seen in Chinatown, we will focus on that area instead,
+
+#### Extracting study area and plotting target planning area
+
+```{r}
+outram = mpsz[mpsz@data$PLN_AREA_N == "OUTRAM",]
+outram_sp = as(outram, "SpatialPolygons")
+outram_owin = as(outram_sp, "owin")
+airbnb_june2019_private_outram_ppp_sg = airbnb_june2019_private_ppp[sg_owin]
+airbnb_june2019_home_outram_ppp_sg = airbnb_june2019_home_ppp_jit[sg_owin]
+airbnb_june2019_share_outram_ppp_sg = airbnb_june2019_share_ppp_jit[sg_owin]
+airbnb_july2021_private_outram_ppp_sg = airbnb_july2021_private_ppp[sg_owin]
+airbnb_july2021_home_outram_ppp_sg = airbnb_july2021_home_ppp[sg_owin]
+airbnb_july2021_share_outram_ppp_sg = airbnb_july2021_share_ppp[sg_owin]
+airbnb_july2021_hotelroom_outram_ppp_sg = airbnb_july2021_hotelroom_ppp[sg_owin]
+```
+
+## Second-order Spatial Point Patterns Analysis
+
+- Formulate the null hypothesis and alternative hypothesis and select the confidence level.
+
+- Perform the test by using appropriate Second order spatial point patterns analysis technique.
+
+- With reference to the analysis results, draw statistical conclusions.
+
+### Second-order Multi-type Spatial Point Patterns Analysis
+
+Checking the types of data in Airbnb June 2019
+
+str() of Base R will be used to check the data type of childcare SpatialPointsDataFrame. This is necessary because the marked field must be in factor data type if its values are categorical.
+
+```{r}
+str(airbnb_june2019)
+```
+Making a factor data for room types 
+
+```{r}
+airbnb_june2019@data$room_type <- as.factor(airbnb_june2019@data$room_type)
+airbnb_july2021@data$room_type <- as.factor(airbnb_july2021@data$room_type)
+```
+
+#### Converting the SpatialPointsDataFrame into ppp format
+
+```{r}
+airbnb_june2019_ppp <- as(airbnb_june2019, "ppp")
+marks(airbnb_june2019_ppp) <- airbnb_june2019_ppp$marks$room_type
+plot(airbnb_june2019_ppp)
+```
+
+There are 3 room types in 2019.
+
+```{r}
+airbnb_july2021_ppp <- as(airbnb_july2021, "ppp")
+marks(airbnb_july2021_ppp) <- airbnb_july2021_ppp$marks$room_type
+plot(airbnb_july2021_ppp)
+```
+
+There are 4 room types in 2019.
+
+#### Examine summary statistics
+
+```{r}
+summary(airbnb_june2019_ppp)
+```
+
+```{r}
+summary(airbnb_july2021_ppp)
+```
+
+#### Handling Duplicates
+
+Applying jittering
+
+```{r}
+airbnb_june2019_ppp_jit <- rjitter(airbnb_june2019_ppp, retry=TRUE, nsim=1, drop=TRUE)
+airbnb_july2021_ppp_jit <- rjitter(airbnb_july2021_ppp, retry=TRUE, nsim=1, drop=TRUE)
+```
+
+Checking for duplicates 
+
+```{r}
+any(duplicated(airbnb_june2019_ppp_jit))
+```
+
+```{r}
+any(duplicated(airbnb_july2021_ppp_jit))
+```
+
+#### Extracting study area
+
+```{r}
+outram = mpsz[mpsz@data$PLN_AREA_N == "OUTRAM",]
+plot(outram, main = "Outram")
+```
+
+```{r}
+outram_sp = as(outram, "SpatialPolygons")
+outram_owin = as(outram_sp, "owin")
+```
+
+Combining Airbnb points and the study area
+
+```{r}
+airbnb_june2019_outram_ppp = airbnb_june2019_ppp_jit[outram_owin]
+airbnb_july2021_outram_ppp = airbnb_july2021_ppp_jit[outram_owin]
+```
+
+#### Analysing Marked Point Patterns
+
+```{r}
+plot(density(split(rescale(airbnb_june2019_outram_ppp, 1000))))
+```
+
+```{r}
+intensity(rescale(airbnb_june2019_outram_ppp, 1000))
+```
+
+Private room has the highest density of 174 units per sqr kilometer, followed by Entire home/apt with a density of 116 units per sqr kilometer and lastly shared room with a density of 50 units per square kilometer
+
+```{r}
+plot(density(split(rescale(airbnb_july2021_outram_ppp, 1000))))
+```
+
+```{r}
+intensity(rescale(airbnb_july2021_outram_ppp, 1000))
+```
+
+Private room has the highest density of 136 units per sqr kilometer, followed by Entire home/apt with a density of 87 units per sqr kilometer, next hotel room wth 52 units per sqr kilometer and lastly shared room with a density of 7 units per square kilometer
+
+#### **Relationship of Private Room and Entire Home/Apt Airbnb in 2019**
+
+#### Second-order Multi-tpye Point Patterns Analysis: Cross L-Function
+
+```{r}
+airbnb_june2019_peh_Lcross <- Lcross(airbnb_june2019_outram_ppp, i="Private room", j="Entire home/apt", correction='border')
+plot(airbnb_june2019_peh_Lcross, . -r ~ r, xlab = "distance(m)", xlim=c(0, 500))
+```
+Analysis: There are marked spatial points events that are not independent spatially from 0 to 150m since L(r) is above 0. Then the marked marked spatial point events are independent spatially as L(r) is below 0. Hypothesis needs to be tested to confirm observations.
+
+#### Performing CSR testing on the Cross L-Function
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Private room and Entire home/apt in Airbnb 2019 are spatially independent.
+
+H1= The distribution of Private room and Entire home/apt in Airbnb 2019 are not spatially independent.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+```{r}
+airbnb_june2019_peh_Lcross.csr <- envelope(airbnb_june2019_outram_ppp, Lcross, i="Private room", j="Entire home/apt", correction='border', nsim=999)
+```
+
+```{r}
+plot(airbnb_june2019_peh_Lcross.csr, . -r ~ r, xlab="distance(m)", xlim=c(0,500))
+```
+
+```{r}
+title <- "Cross L function"
+Lcsr_df <- as.data.frame(airbnb_june2019_peh_Lcross.csr)
+colour=c("#0D657D","#ee770d","#D3D3D3")
+csr_plot <- ggplot(Lcsr_df, aes(r, obs-r))+
+  # plot observed value
+  geom_line(colour=c("#4d4d4d"))+
+  geom_line(aes(r,theo-r), colour="red", linetype = "dashed")+
+  # plot simulation envelopes
+  geom_ribbon(aes(ymin=lo-r,ymax=hi-r),alpha=0.1, colour=c("#91bfdb")) +
+  xlab("Distance r (m)") +
+  ylab("L(r)-r") +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,], sides="b", colour=colour[1])  +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,], sides="b", colour=colour[2]) +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,], sides="b", color=colour[3]) +
+  theme_tufte()+
+  ggtitle(title)
+text1<-"Significant clustering"
+text2<-"Significant segregation"
+text3<-"Not significant clustering/segregation"
+# the below conditional statement is required to ensure that the labels (text1/2/3) are assigned to the correct traces
+if (nrow(Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,])==0){ 
+  if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text3, traces = 4) %>%
+      rangeslider() 
+  }else if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      rangeslider() 
+  }else {
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider() 
+  }
+} else if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){
+  if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      rangeslider() 
+  } else{
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider()
+  }
+} else{
+  ggplotly(csr_plot, dynamicTicks=T) %>%
+    style(text = text1, traces = 4) %>%
+    style(text = text2, traces = 5) %>%
+    style(text = text3, traces = 6) %>%
+    rangeslider()
+  }
+```
+
+Analysis: From the plot, L(r) observed line is below L(theo) line from 156m having a lower confidence envelope. The null hypothesis is rejected at 99% confidence interval, thus Private Rooms and Entire Home/Apt are not spatially independent.
+
+#### **Relationship of Private Room and Shared Room Airbnb in 2019**
+
+#### Second-order Multi-tpye Point Patterns Analysis: Cross L-Function
+
+```{r}
+airbn_june2019_Lcross <- Lcross(airbnb_june2019_outram_ppp, i="Private room", j="Shared room", correction='border')
+plot(airbn_june2019_Lcross, . -r ~ r, xlab = "distance(m)", xlim=c(0, 500))
+```
+Analysis: There are marked spatial points events that are not independent spatially from 0 to 150m since L(r) is above 0. Then the marked marked spatial point events are independent spatially as L(r) is below 0. Hypothesis needs to be tested to confirm observations.
+
+#### Performing CSR testing on the Cross L-Function
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Private room and shared room in Airbnb 2019 are spatially independent.
+
+H1= The distribution of Private room and shared room in Airbnb 2019 are not spatially independent.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+```{r}
+airbnb_june2019_Lcross.csr <- envelope(airbnb_june2019_outram_ppp, Lcross, i="Private room", j="Shared room", correction='border', nsim=999)
+```
+
+```{r}
+plot(airbnb_june2019_Lcross.csr, . -r ~ r, xlab="distance(m)", xlim=c(0,500))
+```
+
+```{r}
+title <- "Cross L function"
+Lcsr_df <- as.data.frame(airbnb_june2019_Lcross.csr)
+colour=c("#0D657D","#ee770d","#D3D3D3")
+csr_plot <- ggplot(Lcsr_df, aes(r, obs-r))+
+  # plot observed value
+  geom_line(colour=c("#4d4d4d"))+
+  geom_line(aes(r,theo-r), colour="red", linetype = "dashed")+
+  # plot simulation envelopes
+  geom_ribbon(aes(ymin=lo-r,ymax=hi-r),alpha=0.1, colour=c("#91bfdb")) +
+  xlab("Distance r (m)") +
+  ylab("L(r)-r") +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,], sides="b", colour=colour[1])  +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,], sides="b", colour=colour[2]) +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,], sides="b", color=colour[3]) +
+  theme_tufte()+
+  ggtitle(title)
+text1<-"Significant clustering"
+text2<-"Significant segregation"
+text3<-"Not significant clustering/segregation"
+# the below conditional statement is required to ensure that the labels (text1/2/3) are assigned to the correct traces
+if (nrow(Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,])==0){ 
+  if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text3, traces = 4) %>%
+      rangeslider() 
+  }else if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      rangeslider() 
+  }else {
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider() 
+  }
+} else if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){
+  if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      rangeslider() 
+  } else{
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider()
+  }
+} else{
+  ggplotly(csr_plot, dynamicTicks=T) %>%
+    style(text = text1, traces = 4) %>%
+    style(text = text2, traces = 5) %>%
+    style(text = text3, traces = 6) %>%
+    rangeslider()
+  }
+```
+
+Analysis: From the plot, L(r) observed line is below L(theo) line, having a lower confidence envelope. The null hypothesis is rejected at 99% confidence interval, thus Private Rooms and Shared Rooms are not spatially independent.
+
+#### **Relationship of Entire home/apt and Shared Room Airbnb in 2019**
+
+#### Second-order Multi-tpye Point Patterns Analysis: Cross L-Function
+
+```{r}
+airbnb_june2019_ehsr_Lcross <- Lcross(airbnb_june2019_outram_ppp, i="Entire home/apt", j="Shared room", correction='border')
+plot(airbnb_june2019_ehsr_Lcross, . -r ~ r, xlab = "distance(m)", xlim=c(0, 500))
+```
+Analysis: There are marked spatial points events that are not independent spatially from 0 to 150m since L(r) is above 0. Then the marked marked spatial point events are independent spatially as L(r) is below 0. Hypothesis needs to be tested to confirm observations.
+
+#### Performing CSR testing on the Cross L-Function
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Entire home/apt and shared room in Airbnb 2019 are spatially independent.
+
+H1= The distribution of Entire home/apt and shared room in Airbnb 2019 are not spatially independent.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+```{r}
+airbnb_june2019_ehsr_Lcross.csr <- envelope(airbnb_june2019_outram_ppp, Lcross, i="Entire home/apt", j="Shared room", correction='border', nsim=999)
+```
+
+```{r}
+plot(airbnb_june2019_ehsr_Lcross.csr, . -r ~ r, xlab="distance(m)", xlim=c(0,500))
+```
+
+```{r}
+title <- "Cross L function"
+Lcsr_df <- as.data.frame(airbnb_june2019_ehsr_Lcross.csr)
+colour=c("#0D657D","#ee770d","#D3D3D3")
+csr_plot <- ggplot(Lcsr_df, aes(r, obs-r))+
+  # plot observed value
+  geom_line(colour=c("#4d4d4d"))+
+  geom_line(aes(r,theo-r), colour="red", linetype = "dashed")+
+  # plot simulation envelopes
+  geom_ribbon(aes(ymin=lo-r,ymax=hi-r),alpha=0.1, colour=c("#91bfdb")) +
+  xlab("Distance r (m)") +
+  ylab("L(r)-r") +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,], sides="b", colour=colour[1])  +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,], sides="b", colour=colour[2]) +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,], sides="b", color=colour[3]) +
+  theme_tufte()+
+  ggtitle(title)
+text1<-"Significant clustering"
+text2<-"Significant segregation"
+text3<-"Not significant clustering/segregation"
+# the below conditional statement is required to ensure that the labels (text1/2/3) are assigned to the correct traces
+if (nrow(Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,])==0){ 
+  if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text3, traces = 4) %>%
+      rangeslider() 
+  }else if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      rangeslider() 
+  }else {
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider() 
+  }
+} else if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){
+  if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      rangeslider() 
+  } else{
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider()
+  }
+} else{
+  ggplotly(csr_plot, dynamicTicks=T) %>%
+    style(text = text1, traces = 4) %>%
+    style(text = text2, traces = 5) %>%
+    style(text = text3, traces = 6) %>%
+    rangeslider()
+  }
+```
+
+Analysis: From the plot, L(r) observed line is below L(theo) line, having a lower confidence envelope. The null hypothesis is not rejected at 99% confidence interval, thus Private Rooms and Shared Rooms are spatially independent.
+
+#### **Relationship of Private Room and Entire Home/Apt Airbnb in 2021**
+
+#### Second-order Multi-tpye Point Patterns Analysis: Cross L-Function
+
+```{r}
+airbnb_july2021_peh_Lcross <- Lcross(airbnb_july2021_outram_ppp, i="Private room", j="Entire home/apt", correction='border')
+plot(airbnb_july2021_peh_Lcross, . -r ~ r, xlab = "distance(m)", xlim=c(0, 500))
+```
+
+Analysis: There are marked spatial points events that are not independent spatially from 0 to 150m since L(r) is above 0. Then the marked marked spatial point events are independent spatially as L(r) is below 0. Hypothesis needs to be tested to confirm observations.
+
+#### Performing CSR testing on the Cross L-Function
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Private rooms and Entire home/apt in Airbnb 2021 are spatially independent.
+
+H1= The distribution of Private rooms and Entire home/apt in Airbnb 2021 are not spatially independent.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+```{r}
+airbnb_july2021_peh_Lcross.csr <- envelope(airbnb_july2021_outram_ppp, Lcross, i="Private room", j="Entire home/apt", correction='border', nsim=999)
+```
+
+```{r}
+plot(airbnb_july2021_peh_Lcross.csr, . -r ~ r, xlab="distance(m)", xlim=c(0,500))
+```
+
+```{r}
+title <- "Cross L function"
+Lcsr_df <- as.data.frame(airbnb_july2021_peh_Lcross.csr)
+colour=c("#0D657D","#ee770d","#D3D3D3")
+csr_plot <- ggplot(Lcsr_df, aes(r, obs-r))+
+  # plot observed value
+  geom_line(colour=c("#4d4d4d"))+
+  geom_line(aes(r,theo-r), colour="red", linetype = "dashed")+
+  # plot simulation envelopes
+  geom_ribbon(aes(ymin=lo-r,ymax=hi-r),alpha=0.1, colour=c("#91bfdb")) +
+  xlab("Distance r (m)") +
+  ylab("L(r)-r") +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,], sides="b", colour=colour[1])  +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,], sides="b", colour=colour[2]) +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,], sides="b", color=colour[3]) +
+  theme_tufte()+
+  ggtitle(title)
+text1<-"Significant clustering"
+text2<-"Significant segregation"
+text3<-"Not significant clustering/segregation"
+# the below conditional statement is required to ensure that the labels (text1/2/3) are assigned to the correct traces
+if (nrow(Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,])==0){ 
+  if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text3, traces = 4) %>%
+      rangeslider() 
+  }else if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      rangeslider() 
+  }else {
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider() 
+  }
+} else if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){
+  if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      rangeslider() 
+  } else{
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider()
+  }
+} else{
+  ggplotly(csr_plot, dynamicTicks=T) %>%
+    style(text = text1, traces = 4) %>%
+    style(text = text2, traces = 5) %>%
+    style(text = text3, traces = 6) %>%
+    rangeslider()
+  }
+```
+#### **Relationship of Private Room and Shared Room Airbnb in 2021**
+
+#### Second-order Multi-tpye Point Patterns Analysis: Cross L-Function
+
+```{r}
+airbnb_july2021_Lcross <- Lcross(airbnb_july2021_outram_ppp, i="Private room", j="Shared room", correction='border')
+plot(airbnb_july2021_Lcross, . -r ~ r, xlab = "distance(m)", xlim=c(0, 500))
+```
+
+#### Performing CSR testing on the Cross L-Function
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Private rooms and shared room in Airbnb 2021 are spatially independent.
+
+H1= The distribution of Private rooms and shared room in Airbnb 2021 are not spatially independent.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+```{r}
+airbnb_july2021_Lcross.csr <- envelope(airbnb_july2021_outram_ppp, Lcross, i="Private room", j="Shared room", correction='border', nsim=999)
+```
+
+```{r}
+plot(airbnb_july2021_Lcross.csr, . -r ~ r, xlab="distance(m)", xlim=c(0,500))
+```
+
+```{r}
+title <- "Cross L function"
+Lcsr_df <- as.data.frame(airbnb_july2021_Lcross.csr)
+colour=c("#0D657D","#ee770d","#D3D3D3")
+csr_plot <- ggplot(Lcsr_df, aes(r, obs-r))+
+  # plot observed value
+  geom_line(colour=c("#4d4d4d"))+
+  geom_line(aes(r,theo-r), colour="red", linetype = "dashed")+
+  # plot simulation envelopes
+  geom_ribbon(aes(ymin=lo-r,ymax=hi-r),alpha=0.1, colour=c("#91bfdb")) +
+  xlab("Distance r (m)") +
+  ylab("L(r)-r") +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,], sides="b", colour=colour[1])  +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,], sides="b", colour=colour[2]) +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,], sides="b", color=colour[3]) +
+  theme_tufte()+
+  ggtitle(title)
+text1<-"Significant clustering"
+text2<-"Significant segregation"
+text3<-"Not significant clustering/segregation"
+# the below conditional statement is required to ensure that the labels (text1/2/3) are assigned to the correct traces
+if (nrow(Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,])==0){ 
+  if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text3, traces = 4) %>%
+      rangeslider() 
+  }else if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      rangeslider() 
+  }else {
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider() 
+  }
+} else if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){
+  if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      rangeslider() 
+  } else{
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider()
+  }
+} else{
+  ggplotly(csr_plot, dynamicTicks=T) %>%
+    style(text = text1, traces = 4) %>%
+    style(text = text2, traces = 5) %>%
+    style(text = text3, traces = 6) %>%
+    rangeslider()
+  }
+```
+
+#### **Relationship of Private Room and Hotel Room Airbnb in 2021**
+
+#### Second-order Multi-tpye Point Patterns Analysis: Cross L-Function
+
+```{r}
+airbnb_july2021_phr_Lcross <- Lcross(airbnb_july2021_outram_ppp, i="Private room", j="Hotel room", correction='border')
+plot(airbnb_july2021_phr_Lcross, . -r ~ r, xlab = "distance(m)", xlim=c(0, 500))
+```
+
+Analysis: There are marked spatial points events that are not independent spatially from 0 to 150m since L(r) is above 0. Then the marked marked spatial point events are independent spatially as L(r) is below 0. Hypothesis needs to be tested to confirm observations.
+
+#### Performing CSR testing on the Cross L-Function
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Private rooms and hotel rooms in Airbnb 2021 are spatially independent.
+
+H1= The distribution of Private rooms and hotel rooms in Airbnb 2021 are not spatially independent.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+```{r}
+airbnb_july2021_phr_Lcross.csr <- envelope(airbnb_july2021_outram_ppp, Lcross, i="Private room", j="Hotel room", correction='border', nsim=999)
+```
+
+```{r}
+plot(airbnb_july2021_phr_Lcross.csr, . -r ~ r, xlab="distance(m)", xlim=c(0,500))
+```
+
+```{r}
+title <- "Cross L function"
+Lcsr_df <- as.data.frame(airbnb_july2021_phr_Lcross.csr)
+colour=c("#0D657D","#ee770d","#D3D3D3")
+csr_plot <- ggplot(Lcsr_df, aes(r, obs-r))+
+  # plot observed value
+  geom_line(colour=c("#4d4d4d"))+
+  geom_line(aes(r,theo-r), colour="red", linetype = "dashed")+
+  # plot simulation envelopes
+  geom_ribbon(aes(ymin=lo-r,ymax=hi-r),alpha=0.1, colour=c("#91bfdb")) +
+  xlab("Distance r (m)") +
+  ylab("L(r)-r") +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,], sides="b", colour=colour[1])  +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,], sides="b", colour=colour[2]) +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,], sides="b", color=colour[3]) +
+  theme_tufte()+
+  ggtitle(title)
+text1<-"Significant clustering"
+text2<-"Significant segregation"
+text3<-"Not significant clustering/segregation"
+# the below conditional statement is required to ensure that the labels (text1/2/3) are assigned to the correct traces
+if (nrow(Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,])==0){ 
+  if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text3, traces = 4) %>%
+      rangeslider() 
+  }else if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      rangeslider() 
+  }else {
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider() 
+  }
+} else if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){
+  if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      rangeslider() 
+  } else{
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider()
+  }
+} else{
+  ggplotly(csr_plot, dynamicTicks=T) %>%
+    style(text = text1, traces = 4) %>%
+    style(text = text2, traces = 5) %>%
+    style(text = text3, traces = 6) %>%
+    rangeslider()
+  }
+```
+
+#### **Relationship of Entire home/apt and Shared Room Airbnb in 2021**
+
+#### Second-order Multi-tpye Point Patterns Analysis: Cross L-Function
+
+```{r}
+airbnb_july2021_ehsr_Lcross <- Lcross(airbnb_july2021_outram_ppp, i="Entire home/apt", j="Shared room", correction='border')
+plot(airbnb_july2021_ehsr_Lcross, . -r ~ r, xlab = "distance(m)", xlim=c(0, 500))
+```
+
+#### Performing CSR testing on the Cross L-Function
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Entire home/apt and shared room in Airbnb 2021 are spatially independent.
+
+H1= The distribution of Entire home/apt and shared room in Airbnb 2021 are not spatially independent.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+```{r}
+airbnb_july2021_ehsr_Lcross.csr <- envelope(airbnb_july2021_outram_ppp, Lcross, i="Entire home/apt", j="Shared room", correction='border', nsim=999)
+```
+
+```{r}
+plot(airbnb_july2021_ehsr_Lcross.csr, . -r ~ r, xlab="distance(m)", xlim=c(0,500))
+```
+
+```{r}
+title <- "Cross L function"
+Lcsr_df <- as.data.frame(airbnb_july2021_ehsr_Lcross.csr)
+colour=c("#0D657D","#ee770d","#D3D3D3")
+csr_plot <- ggplot(Lcsr_df, aes(r, obs-r))+
+  # plot observed value
+  geom_line(colour=c("#4d4d4d"))+
+  geom_line(aes(r,theo-r), colour="red", linetype = "dashed")+
+  # plot simulation envelopes
+  geom_ribbon(aes(ymin=lo-r,ymax=hi-r),alpha=0.1, colour=c("#91bfdb")) +
+  xlab("Distance r (m)") +
+  ylab("L(r)-r") +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,], sides="b", colour=colour[1])  +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,], sides="b", colour=colour[2]) +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,], sides="b", color=colour[3]) +
+  theme_tufte()+
+  ggtitle(title)
+text1<-"Significant clustering"
+text2<-"Significant segregation"
+text3<-"Not significant clustering/segregation"
+# the below conditional statement is required to ensure that the labels (text1/2/3) are assigned to the correct traces
+if (nrow(Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,])==0){ 
+  if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text3, traces = 4) %>%
+      rangeslider() 
+  }else if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      rangeslider() 
+  }else {
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider() 
+  }
+} else if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){
+  if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      rangeslider() 
+  } else{
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider()
+  }
+} else{
+  ggplotly(csr_plot, dynamicTicks=T) %>%
+    style(text = text1, traces = 4) %>%
+    style(text = text2, traces = 5) %>%
+    style(text = text3, traces = 6) %>%
+    rangeslider()
+  }
+```
+
+#### **Relationship of Entire home/apt and Hotel Room in 2021**
+
+#### Second-order Multi-tpye Point Patterns Analysis: Cross L-Function
+
+```{r}
+airbnb_july2021_ehhr_Lcross <- Lcross(airbnb_july2021_outram_ppp, i="Entire home/apt", j="Hotel room", correction='border')
+plot(airbnb_july2021_ehhr_Lcross, . -r ~ r, xlab = "distance(m)", xlim=c(0, 500))
+```
+
+#### Performing CSR testing on the Cross L-Function
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Entire home/apt and hotel room in Airbnb 2021 are spatially independent.
+
+H1= The distribution of Entire home/apt and hotel room in Airbnb 2021 are not spatially independent.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+```{r}
+airbnb_july2021_ehhr_Lcross.csr <- envelope(airbnb_july2021_outram_ppp, Lcross, i="Entire home/apt", j="Hotel room", correction='border', nsim=999)
+```
+
+```{r}
+plot(airbnb_july2021_ehhr_Lcross.csr, . -r ~ r, xlab="distance(m)", xlim=c(0,500))
+```
+
+```{r}
+title <- "Cross L function"
+Lcsr_df <- as.data.frame(airbnb_july2021_ehhr_Lcross.csr)
+colour=c("#0D657D","#ee770d","#D3D3D3")
+csr_plot <- ggplot(Lcsr_df, aes(r, obs-r))+
+  # plot observed value
+  geom_line(colour=c("#4d4d4d"))+
+  geom_line(aes(r,theo-r), colour="red", linetype = "dashed")+
+  # plot simulation envelopes
+  geom_ribbon(aes(ymin=lo-r,ymax=hi-r),alpha=0.1, colour=c("#91bfdb")) +
+  xlab("Distance r (m)") +
+  ylab("L(r)-r") +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,], sides="b", colour=colour[1])  +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,], sides="b", colour=colour[2]) +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,], sides="b", color=colour[3]) +
+  theme_tufte()+
+  ggtitle(title)
+text1<-"Significant clustering"
+text2<-"Significant segregation"
+text3<-"Not significant clustering/segregation"
+# the below conditional statement is required to ensure that the labels (text1/2/3) are assigned to the correct traces
+if (nrow(Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,])==0){ 
+  if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text3, traces = 4) %>%
+      rangeslider() 
+  }else if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      rangeslider() 
+  }else {
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider() 
+  }
+} else if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){
+  if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      rangeslider() 
+  } else{
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider()
+  }
+} else{
+  ggplotly(csr_plot, dynamicTicks=T) %>%
+    style(text = text1, traces = 4) %>%
+    style(text = text2, traces = 5) %>%
+    style(text = text3, traces = 6) %>%
+    rangeslider()
+  }
+```
+
+#### **Relationship of Shared room and Hotel Room in 2021**
+
+#### Second-order Multi-tpye Point Patterns Analysis: Cross L-Function
+
+```{r}
+airbnb_july2021_srhr_Lcross <- Lcross(airbnb_july2021_outram_ppp, i="Shared room", j="Hotel room", correction='border')
+plot(airbnb_july2021_srhr_Lcross, . -r ~ r, xlab = "distance(m)", xlim=c(0, 500))
+```
+
+#### Performing CSR testing on the Cross L-Function
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Shared room and hotel room in Airbnb 2021 are spatially independent.
+
+H1= The distribution of Shared room and hotel room in Airbnb 2021 are not spatially independent.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+```{r}
+airbnb_july2021_srhr_Lcross.csr <- envelope(airbnb_july2021_outram_ppp, Lcross, i="Shared room", j="Hotel room", correction='border', nsim=999)
+```
+
+```{r}
+plot(airbnb_july2021_srhr_Lcross.csr, . -r ~ r, xlab="distance(m)", xlim=c(0,500))
+```
+
+```{r}
+title <- "Cross L function"
+Lcsr_df <- as.data.frame(airbnb_july2021_srhr_Lcross.csr)
+colour=c("#0D657D","#ee770d","#D3D3D3")
+csr_plot <- ggplot(Lcsr_df, aes(r, obs-r))+
+  # plot observed value
+  geom_line(colour=c("#4d4d4d"))+
+  geom_line(aes(r,theo-r), colour="red", linetype = "dashed")+
+  # plot simulation envelopes
+  geom_ribbon(aes(ymin=lo-r,ymax=hi-r),alpha=0.1, colour=c("#91bfdb")) +
+  xlab("Distance r (m)") +
+  ylab("L(r)-r") +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,], sides="b", colour=colour[1])  +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,], sides="b", colour=colour[2]) +
+  geom_rug(data=Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,], sides="b", color=colour[3]) +
+  theme_tufte()+
+  ggtitle(title)
+text1<-"Significant clustering"
+text2<-"Significant segregation"
+text3<-"Not significant clustering/segregation"
+# the below conditional statement is required to ensure that the labels (text1/2/3) are assigned to the correct traces
+if (nrow(Lcsr_df[Lcsr_df$obs > Lcsr_df$hi,])==0){ 
+  if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text3, traces = 4) %>%
+      rangeslider() 
+  }else if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){ 
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      rangeslider() 
+  }else {
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text2, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider() 
+  }
+} else if (nrow(Lcsr_df[Lcsr_df$obs < Lcsr_df$lo,])==0){
+  if (nrow(Lcsr_df[Lcsr_df$obs >= Lcsr_df$lo & Lcsr_df$obs <= Lcsr_df$hi,])==0){
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      rangeslider() 
+  } else{
+    ggplotly(csr_plot, dynamicTicks=T) %>%
+      style(text = text1, traces = 4) %>%
+      style(text = text3, traces = 5) %>%
+      rangeslider()
+  }
+} else{
+  ggplotly(csr_plot, dynamicTicks=T) %>%
+    style(text = text1, traces = 4) %>%
+    style(text = text2, traces = 5) %>%
+    style(text = text3, traces = 6) %>%
+    rangeslider()
+  }
+```
+
