@@ -1,0 +1,409 @@
+---
+title: "Take Home Exercise 1"
+description: |
+  A short description of the post.
+author:
+  - name: Ngah Xin Yan
+    url: https://github.com/nxinyan/
+date: 09-08-2021
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Background Information
+
+Since the outbreak of COVID-19 in Wuhan, China, it has affected many countries worldwide. COVID-19 is an deadly disease, with a 2% case fatality rate. Indonesia is part of this ongoing COVID-19 pandemic. It reached the country on 2 March 2020 and since then, the number of cases and death rates has remained high. All the cases were spread among 34 provinces in Indonesia. Among all the provinces, DKI JArkarta contributed close to 24% of the cumulative confirmed cases. 
+
+## Objective
+
+This exercise aims to reveal the spatio-temporal patterns of monthly cumulative confirmed COVID-19 rate and death rate at sub-district level.
+
+## Data Used
+
+- Open Data Covid-19 Provinsi DKI Jakarta (March 2020 - July 2021)
+- Indonesia Geospatial (Shapefile (SHP) Batas Desa Provinsi DKI Jakarta)
+
+## Installing and Loading the R packages
+
+```{r echo=TRUE, eval=TRUE}
+
+packages = c('sf', 'tmap', 'tidyverse','tidyr','readxl','openxlsx','dplyr')
+for (p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p,character.only = T)
+}
+```
+
+## Data Extraction, Wrangling and Integration
+### Importing Geospatial Data
+
+The code chunk below will import Indonesia Geospatial layer
+
+```{r echo=TRUE, eval=TRUE}
+jakarta <- st_read(dsn = "data/Geospatial", 
+                    layer = "BATAS_DESA_DESEMBER_2019_DUKCAPIL_DKI_JAKARTA")
+```
+
+Display basic information of the feature class
+
+```{r echo=TRUE, eval=TRUE}
+st_geometry(jakarta)
+```
+Looking at the associated information in the dataframe
+
+```{r echo=TRUE, eval=TRUE}
+glimpse(jakarta)
+```
+
+Making an interactive map to identify the outer lands
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode('view')
+tm_shape(jakarta)+
+  tm_polygons() +
+tm_shape(jakarta) +
+  tm_fill("KAB_KOTA",
+          palette = "RdYlBu")+
+  tm_borders()
+```
+
+From the interactive map, it is observed that the outer islands are in dark blue. Since we are not focusing on outer islands, it will be excluded from the dataset
+
+```{r echo=TRUE, eval=TRUE}
+jakarta_n <- jakarta[!(jakarta$KAB_KOTA == "KEPULAUAN SERIBU" ),]
+```
+
+Checking of CRS Code and Reassignment
+
+```{r echo=TRUE, eval=TRUE}
+st_crs(jakarta_n)
+jakarta_sf <- st_transform(jakarta_n, 23845)
+st_crs(jakarta_sf)
+```
+
+Retaining first nine field in DKI Jakarta sf dataframe
+
+```{r echo=TRUE, eval=TRUE}
+dki_jakarta <- select(jakarta_sf, c(1,2,3,4,5,6,7,8,9))
+```
+
+```{r echo=TRUE, eval=TRUE}
+glimpse(dki_jakarta)
+```
+
+### Importing Aspatial Data
+
+The Covid-19 Data in Indonesia are in xlsx format, code chunk below will convert the data into a tibble data frame
+
+```{r echo=FALSE, eval=TRUE}
+data1 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/feb2021.xlsx")
+data2 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/jan2021.xlsx")
+data3 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/mar2021.xlsx")
+data4 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/apr2021.xlsx")
+data5 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/mei2021.xlsx")
+data6 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/june2021.xlsx")
+data7 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/july2021.xlsx")
+data8 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/mar2020.xlsx")
+data9 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/apr2020.xlsx")
+data10 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/mei2020.xlsx")
+data11 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/june2020.xlsx")
+data12 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/july2020.xlsx")
+data13 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/aug2020.xlsx")
+data14 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/sep2020.xlsx")
+data15 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/oct2020.xlsx")
+data16 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/nov2020.xlsx")
+data17 <- read.xlsx("C:/nxinyan/IS415/IS415_blog-2/_posts/2021-10-26-take-home-exercise-1/data/Aspatial/dec2020.xlsx")
+```
+Extracting the column being analysed: 
+
+```{r echo=TRUE, eval=TRUE}
+feb2021 <- select(data1[(data1$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),], c(1,2,3,4,5,28,31))
+jan2021 <- select(data2[(data2$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),], c(1,2,3,4,5,28,31))
+mar2021 <- select(data3[(data3$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),], c(1,2,3,4,5,28,31))
+apr2021 <- select(data4[(data4$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),],  c(1,2,3,4,5,28,31))
+may2021 <- select(data5[(data5$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),],  c(1,2,3,4,5,28,31))
+jun2021 <- select(data6[(data6$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),],  c(1,2,3,4,5,28,31))
+jul2021 <- select(data7[(data7$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),], c(1,2,3,4,5,28,31))
+mar2020 <- select(data8[(data8$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),], c(2,3,4,5,6,13,16))
+apr2020 <- select(data9[(data9$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),],  c(2,3,4,5,6,13,16))
+may2020 <- select(data10[(data10$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),],  c(2,3,4,5,6,13,16))
+jun2020 <- select(data11[(data11$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),],  c(2,3,4,5,6,15,18))
+jul2020 <- select(data12[(data12$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),],  c(1,2,3,4,5,23,26))
+aug2020 <- select(data13[(data13$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),],  c(1,2,3,4,5,25,28))
+sep2020 <- select(data14[(data14$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),],  c(1,2,3,4,5,26,29))
+oct2020 <- select(data15[(data15$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),],  c(1,2,3,4,5,27,30))
+nov2020 <- select(data16[(data16$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),],  c(1,2,3,4,5,27,30))
+dec2020 <- select(data17[(data17$nama_kota != "KEPULAUAN SERIBU" | data8$nama_kota != "KAB.ADM.KEP.SERIBU
+"),],  c(1,2,3,4,5,27,30))
+```
+
+Geospatial Data Integration and Removing records with NA with code chunk below:
+
+```{r echo=TRUE, eval=TRUE}
+dki_mar2020 <- left_join(dki_jakarta, mar2020,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_apr2020 <- left_join(dki_jakarta, apr2020,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_may2020 <- left_join(dki_jakarta, may2020,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_jun2020 <- left_join(dki_jakarta, jun2020,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_jul2020 <- left_join(dki_jakarta, jul2020,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_aug2020 <- left_join(dki_jakarta, aug2020,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_sep2020 <- left_join(dki_jakarta, sep2020,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_oct2020 <- left_join(dki_jakarta, oct2020,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_nov2020 <- left_join(dki_jakarta, nov2020,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_dec2020 <- left_join(dki_jakarta, dec2020,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_jan2021 <- left_join(dki_jakarta, jan2021,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_feb2021 <- left_join(dki_jakarta, feb2021,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_mar2021 <- left_join(dki_jakarta, mar2021,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_apr2021 <- left_join(dki_jakarta, apr2021,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_may2021 <- left_join(dki_jakarta, may2021,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_jun2021 <- left_join(dki_jakarta, jun2021,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+dki_jul2021 <- left_join(dki_jakarta, jul2021,
+                          by = c("DESA_KELUR" = "nama_kelurahan")) %>%
+  drop_na()
+
+
+```
+
+Calculate the cumulative confirmed cases rate (i.e. cases per 10000 population) and the cumulative death rate by month with code chunks below:
+
+Cumulative Rate for Cases
+
+```{r echo=TRUE, eval=TRUE}
+dki_mar2020 <- dki_mar2020 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_apr2020 <- dki_apr2020 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_may2020 <- dki_may2020 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_jun2020 <- dki_jun2020 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_jul2020 <- dki_jul2020 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_aug2020 <- dki_aug2020 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_sep2020 <- dki_sep2020 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_oct2020 <- dki_oct2020 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_nov2020 <- dki_nov2020 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_dec2020 <- dki_dec2020 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_jan2021 <- dki_jan2021 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_feb2021 <- dki_feb2021 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_mar2021 <- dki_mar2021 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_apr2021 <- dki_apr2021 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_may2021 <- dki_may2021 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_jun2021 <- dki_jun2021 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+
+dki_jul2021 <- dki_jul2021 %>%
+  mutate(`Cumulative Rate for Cases` = `POSITIF`/(`JUMLAH_PEN`/10000))
+```
+
+Cumulative Rate for Deaths 
+
+```{r echo=TRUE, eval=TRUE}
+dki_mar2020 <- dki_mar2020 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_apr2020 <- dki_apr2020 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_may2020 <- dki_may2020 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_jun2020 <- dki_jun2020 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_jul2020 <- dki_jul2020 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_aug2020 <- dki_aug2020 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_sep2020 <- dki_sep2020 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_oct2020 <- dki_oct2020 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_nov2020 <- dki_nov2020 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_dec2020 <- dki_dec2020 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_jan2021 <- dki_jan2021 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_feb2021 <- dki_feb2021 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_mar2021 <- dki_mar2021 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_apr2021 <- dki_apr2021 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_may2021 <- dki_may2021 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_jun2021 <- dki_jun2021 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+
+dki_jul2021 <- dki_jul2021 %>%
+  mutate(`Cumulative Rate for Deaths` = `Meninggal`/(`JUMLAH_PEN`/10000))
+```
+
+## Analysis by Month
+
+### March 2020
+**Thematic Map for Cumulative Rates**
+
+```{r echo=TRUE, eval=TRUE}
+tmap_mode("plot")
+tm_shape(dki_mar2020)+
+  tm_fill(c("Cumulative Rate for Cases", "Cumulative Rate for Deaths"),
+          style = "quantile",
+          palette = "Blues") + 
+  tm_layout(main.title = "Cumulative Rates of Covid-19 Cases (left) and Deaths (right) \nby District - March 2020 (Quantile Classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.position = c("left","bottom") )+
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_credits("Source: Source: Health Ministry of Indonesia")
+```
+**Analytical Map**
+
+```{r echo=TRUE, eval=TRUE}
+get.var <- function(vname,df) {
+v <- df[vname] %>% st_set_geometry(NULL)
+v <- unname(v[,1])
+return(v)
+}
+
+```  
+
+```{r echo=TRUE, eval=TRUE}
+boxbreaks <- function(v,mult=1.5) {
+  qv <- unname(quantile(v))
+  iqr <- qv[4] - qv[2]
+  upfence <- qv[4] + mult * iqr
+  lofence <- qv[2] - mult * iqr
+  # initialize break points vector
+  bb <- vector(mode="numeric",length=7)
+  # logic for lower and upper fences
+  if (lofence < qv[1]) {  # no lower outliers
+    bb[1] <- lofence
+    bb[2] <- floor(qv[1])
+  } else {
+    bb[2] <- lofence
+    bb[1] <- qv[1]
+  }
+  if (upfence > qv[5]) { # no upper outliers
+    bb[7] <- upfence
+    bb[6] <- ceiling(qv[5])
+  } else {
+    bb[6] <- upfence
+    bb[7] <- qv[5]
+  }
+  bb[3:5] <- qv[2:4]
+  return(bb)
+}
+```
