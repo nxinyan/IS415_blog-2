@@ -1112,3 +1112,480 @@ Analysis: The null hypothesis is rejected as the p-value = 0.002 is smaller than
 
 Overall: ALl the areas shows that the Airbnb listing are not randomly distributed. AS Rochor and Outram has R value nearer to 1, we will focus on those 2 areas for further analysis.
 
+### Analysing Spatial Point Process Using G-Function
+
+Measures the distribution of the distances from an arbitrary event to its nearest event.
+
+#### **Rochor**
+
+COMPUTING G-FUNCTION ESTIMATION
+
+The code chunk below is used to compute G-function using Gest() of spatat package.
+
+```{r}
+G_rochor = Gest(airbnb_june2019_rochor_ppp, correction = "border")
+plot(G_rochor, xlim=c(0,150))
+```
+
+Analysis: Analysis: Airbnb in Rochor are found to be clustered as from the plot above, G(r) rises sharply at the start and slowly increases after it passes around 30.
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Airbnb Listing at Rochor are randomly distributed.
+
+H1= The distribution of Airbnb Listing at Rochor are not randomly distributed.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+Monte Carlo test with G-fucntion
+
+```{r}
+G_rochor.csr <- envelope(airbnb_june2019_rochor_ppp, Gest, nsim = 999)
+```
+
+```{r}
+plot(G_rochor.csr)
+```
+
+Analysis: The Airbnb in Rochor is clustered as G(r) observed is above G(r) theo, having a higher confidence. The null hypothesis is rejected at 99% confidence interval.
+
+#### **outram**
+
+COMPUTING G-FUNCTION ESTIMATION
+
+The code chunk below is used to compute G-function using Gest() of spatat package.
+
+```{r}
+G_outram = Gest(airbnb_june2019_outram_ppp, correction = "border")
+plot(G_outram, xlim=c(0,150))
+```
+
+Analysis: Airbnb in Outram are found to be clustered as from the plot above, G(r) rises sharply at the start and slowly increases after it passes around 25.
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Airbnb Listing at Outram are randomly distributed.
+
+H1= The distribution of Airbnb Listing at Outram are not randomly distributed.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+Monte Carlo test with G-fucntion
+
+```{r}
+G_outram.csr <- envelope(airbnb_june2019_outram_ppp, Gest, nsim = 999)
+```
+
+```{r}
+plot(G_outram.csr)
+```
+
+Analysis: The Airbnb in Outram is clustered as G(r) observed is above G(r) theo, having a higher confidence. The null hypothesis is rejected at 99% confidence interval.
+
+### Analysing Spatial Point Process Using F-Function
+
+The F function estimates the empty space function F(r) or its hazard rate h(r) from a point pattern in a window of arbitrary shape.
+
+#### **Rochor**
+
+COMPUTING F-FUNCTION ESTIMATION
+
+
+The code chunk below is used to compute F-function using Fest() of spatat package.
+
+```{r}
+F_rochor = Fest(airbnb_june2019_rochor_ppp)
+plot(F_rochor)
+```
+
+Analysis: Analysis: Airbnb in Rochor are found to be clustered as from the plot above, F(r) rises gradually over time.
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Airbnb Listing at Rochor are randomly distributed.
+
+H1= The distribution of Airbnb Listing at Rochor are not randomly distributed.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+Monte Carlo test with F-function
+
+```{r}
+F_rochor.csr <- envelope(airbnb_june2019_rochor_ppp, Fest, nsim = 999)
+```
+
+```{r}
+plot(F_rochor.csr)
+```
+
+Analysis: The Airbnb in Rochor is clustered as F(r) observed is below F(r) theo, having a lower confidence. The null hypothesis is rejected at 99% confidence interval.
+
+
+#### **Outram**
+
+COMPUTING F-FUNCTION ESTIMATION
+
+
+The code chunk below is used to compute F-function using Fest() of spatat package.
+
+```{r}
+F_outram = Fest(airbnb_june2019_outram_ppp)
+plot(F_outram)
+```
+
+Analysis: Analysis: Airbnb in Rochor are found to be clustered as from the plot above, F(r) rises gradually over time.
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Airbnb Listing at Outram are randomly distributed.
+
+H1= The distribution of Airbnb Listing at Outram are not randomly distributed.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+Monte Carlo test with F-function
+
+```{r}
+F_outram.csr <- envelope(airbnb_june2019_outram_ppp, Fest, nsim = 999)
+```
+
+```{r}
+plot(F_outram.csr)
+```
+
+Analysis: The Airbnb in Outram is clustered as F(r) observed is below F(r) theo, having a lower confidence. The null hypothesis is rejected at 99% confidence interval.
+
+### Analysing Spatial Point Process Using L-Function
+
+To compute L-function estimation by using Lest() of spatstat package.
+
+#### **Rochor**
+
+COMPUTING L-FUNCTION ESTIMATION
+
+
+The code chunk below is used to compute L-function using Lest() of spatat package.
+
+```{r}
+L_rochor = Lest(airbnb_june2019_rochor_ppp, correction = "Ripley")
+plot(L_rochor, . -r ~ r, ylab= "L(r)", xlab = "r")
+```
+
+Analysis: Airbnb in Rochor shows L(r) above 0, thus it is likely to be clusrered.
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Airbnb Listing at Rochor are randomly distributed.
+
+H1= The distribution of Airbnb Listing at Rochor are not randomly distributed.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+```{r}
+L_rochor.csr <- envelope(airbnb_june2019_rochor_ppp, Lest, nsim = 99, rank = 1, glocal=TRUE)
+```
+
+```{r}
+plot(L_rochor.csr, . - r ~ r, xlab="r", ylab="L(r)")
+```
+
+Analysis: The Airbnb in Rochor is clustered as L(r) observed is below L(r) theo, having a higher confidence. The null hypothesis is rejected at 99% confidence interval.
+
+#### **Outram**
+
+COMPUTING L-FUNCTION ESTIMATION
+
+
+The code chunk below is used to compute L-function using Lest() of spatat package.
+
+```{r}
+L_outram = Lest(airbnb_june2019_outram_ppp, correction = "Ripley")
+plot(L_outram, . -r ~ r, ylab= "L(r)", xlab = "r")
+```
+
+Analysis: Airbnb in Outram shows L(r) above 0, thus it is likely to be clustered.
+
+PERFORMING COMPLETE SPATIAL RANDOMNESS TEST
+
+To confirm the observed spatial patterns above, a hypothesis test will be conducted. The hypothesis and test are as follows:
+
+Ho = The distribution of Airbnb Listing at Outram are randomly distributed.
+
+H1= The distribution of Airbnb Listing at Outram are not randomly distributed.
+
+The null hypothesis will be rejected if p-value is smaller than alpha value of 0.001. (99% confidence level)
+
+```{r}
+L_outram.csr <- envelope(airbnb_june2019_outram_ppp, Lest, nsim = 99, rank = 1, glocal=TRUE)
+```
+
+```{r}
+plot(L_outram.csr, . - r ~ r, xlab="r", ylab="L(r)")
+```
+
+Analysis: The Airbnb in Outram is clustered as L(r) observed is below L(r) theo, having a higher confidence. The null hypothesis is rejected at 99% confidence interval.
+
+
+
+
+# Section B: Impact of COVID-19
+
+## Exploratory Spatial Data Analysis
+
+- Derive kernel density maps of all Airbnb listings and Airbnb by room type as at June 2019 and June 2021
+
+- Using appropriate tmap functions, display the kernel density maps on openstreetmap of Singapore,
+
+- Describe the spatial patterns reveal by the kernel density maps.
+
+### Airbnb Listing July 2021
+
+#### **Rescalling KDE values to km(kilometer)**
+
+```{r}
+airbnb_july2021_sg_ppp_km <- rescale(airbnb_july2021_sg_ppp, 1000, 'km')
+```
+
+Now, the code can be re-run to get a better comprehension.
+
+```{r}
+kde_airbnb_july2021_sg_bw <- density(airbnb_july2021_sg_ppp_km,
+                                   sigma=bw.diggle,
+                                   edge=TRUE,
+                                   kernel="gaussian")
+```
+
+#### **Plotting of Kernel Density Estimation Maps**
+
+```{r fig.width=12, fig.height=8}
+plot(kde_airbnb_july2021_sg_bw)
+```
+
+#### Converting KDE output into grid object.
+
+Converting it so that it is suitable for mapping purposes.
+
+```{r}
+gridded_kde_airbnb_july2021_sg_bw <- as.SpatialGridDataFrame.im(kde_airbnb_july2021_sg_bw)
+spplot(gridded_kde_airbnb_july2021_sg_bw)
+```
+
+The density map using grid shows a better visualisation of the listings as it is more visible to see those that are less clustered together as shown with the lighter shade of blue.
+
+```{r}
+kde_airbnb_july2021_sg_bw_m <- density(airbnb_july2021_sg_ppp,
+                                   sigma=bw.diggle,
+                                   edge=TRUE,
+                                   kernel="gaussian")
+```
+
+```{r}
+gridded_kde_airbnb_july2021_sg_bw_m <- as.SpatialGridDataFrame.im(kde_airbnb_july2021_sg_bw_m)
+```
+
+
+#### **CONVERTING GRIDDED OUTPUT INTO RASTER**
+
+Converting the gridded kernal density objects into RasterLayer object by using raster() of **raster** package.
+
+```{r}
+kde_airbnb_july2021_bw_raster <- raster(gridded_kde_airbnb_july2021_sg_bw_m)
+kde_airbnb_july2021_bw_raster
+```
+The crs property is NA as shown above.
+
+#### **ASSIGNING PROJECTION SYSTEMS** display the kernel density maps on openstreetmap of Singapore
+
+Assigning the CRS information on kde_airbnb_june2019_bw_raster Raster Layer
+
+```{r}
+projection(kde_airbnb_july2021_bw_raster) <- CRS("+init=EPSG:3414")
+kde_airbnb_july2021_bw_raster
+```
+
+The CRS property is now available.
+
+Plotting the raster layer on openstreetmap using interactive mode
+
+```{r}
+tmap_mode("view")
+tm_basemap("OpenStreetMap") +
+tm_shape(kde_airbnb_july2021_bw_raster) + 
+  tm_raster("v", palette = "Purples", alpha = 0.7)
+```
+
+
+
+#### Comparing between Airbnb Listing in June 2019 and July 2021
+
+```{r}
+par(mfrow=c(1,2))
+plot(airbnb_june2019_sg_ppp_km, main = "Airbnb 2019")
+plot(airbnb_july2021_sg_ppp_km, main = "Airbnb 2021")
+```
+Analysis: There is significant decrease in the number of Airbnb from 2019 to 2021.
+
+### Airbnb Listing by room type for 2019 and 2021
+
+#### Data Wrangling
+
+Finding all category listed for room type
+
+```{r}
+unique(airbnb_june2019_sf$room_type)
+```
+There is private room, entire home/apt and shared room in Airbnb 2019.
+
+```{r}
+unique(airbnb_july2021_sf$room_type)
+```
+
+There is private room, entire home/apt, shared room and hotel room in Airbnb 2021.
+
+#### Filtering each room type from SpatialPointsDataFrame
+
+```{r}
+airbnb_june2019_private = airbnb_june2019[airbnb_june2019@data$room_type == "Private room",]
+airbnb_june2019_home = airbnb_june2019[airbnb_june2019@data$room_type == "Entire home/apt",]
+airbnb_june2019_share = airbnb_june2019[airbnb_june2019@data$room_type == "Shared room",]
+airbnb_july2021_private = airbnb_july2021[airbnb_july2021@data$room_type == "Private room",]
+airbnb_july2021_home = airbnb_july2021[airbnb_july2021@data$room_type == "Entire home/apt",]
+airbnb_july2021_share = airbnb_july2021[airbnb_july2021@data$room_type == "Shared room",]
+airbnb_july2021_hotelroom = airbnb_july2021[airbnb_july2021@data$room_type == "Hotel room",]
+```
+
+#### Converting the Spatial* class into generic sp format
+
+```{r}
+airbnb_june2019_private_sp <- as(airbnb_june2019_private, "SpatialPoints")
+airbnb_june2019_home_sp <- as(airbnb_june2019_home, "SpatialPoints")
+airbnb_june2019_share_sp <- as(airbnb_june2019_share, "SpatialPoints")
+airbnb_july2021_private_sp <- as(airbnb_july2021_private, "SpatialPoints")
+airbnb_july2021_home_sp <- as(airbnb_july2021_home, "SpatialPoints")
+airbnb_july2021_share_sp <- as(airbnb_july2021_share, "SpatialPoints")
+airbnb_july2021_hotelroom_sp <- as(airbnb_july2021_hotelroom, "SpatialPoints")
+```
+
+#### Converting the generic sp format into spatstat’s ppp format
+
+```{r}
+airbnb_june2019_private_ppp <- as(airbnb_june2019_private_sp, "ppp")
+airbnb_june2019_home_ppp <- as(airbnb_june2019_home_sp, "ppp")
+airbnb_june2019_share_ppp <- as(airbnb_june2019_share_sp, "ppp")
+airbnb_july2021_private_ppp <- as(airbnb_july2021_private, "ppp")
+airbnb_july2021_home_ppp <- as(airbnb_july2021_home, "ppp")
+airbnb_july2021_share_ppp <- as(airbnb_july2021_share, "ppp")
+airbnb_july2021_hotelroom_ppp <- as(airbnb_july2021_hotelroom, "ppp")
+```
+
+### Checking for duplicates in each ppp's objects
+
+```{r}
+any(duplicated(airbnb_june2019_private_ppp))
+```
+
+```{r}
+any(duplicated(airbnb_june2019_home_ppp))
+```
+
+```{r}
+any(duplicated(airbnb_june2019_share_ppp))
+```
+
+```{r}
+any(duplicated(airbnb_july2021_private_ppp))
+```
+
+```{r}
+any(duplicated(airbnb_july2021_home_ppp))
+```
+
+```{r}
+any(duplicated(airbnb_july2021_share_ppp))
+```
+
+```{r}
+any(duplicated(airbnb_july2021_hotelroom_ppp))
+```
+
+Only airbnb_june2019_home_ppp and airbnb_june2019_share_ppp has duplicates.
+
+#### Handling Duplicates
+
+```{r}
+airbnb_june2019_home_ppp_jit <- rjitter(airbnb_june2019_home_ppp, 
+                             retry=TRUE, 
+                             nsim=1, 
+                             drop=TRUE)
+airbnb_june2019_share_ppp_jit <- rjitter(airbnb_june2019_share_ppp, 
+                             retry=TRUE, 
+                             nsim=1, 
+                             drop=TRUE)
+```
+
+Checking for duplicates again
+
+```{r}
+any(duplicated(airbnb_june2019_home_ppp_jit))
+```
+
+```{r}
+any(duplicated(airbnb_june2019_share_ppp_jit))
+```
+
+There are no more duplicated points.
+
+#### Combining point events object and owin object
+
+```{r}
+airbnb_june2019_private_ppp_sg = airbnb_june2019_private_ppp[sg_owin]
+airbnb_june2019_home_ppp_sg = airbnb_june2019_home_ppp_jit[sg_owin]
+airbnb_june2019_share_ppp_sg = airbnb_june2019_share_ppp_jit[sg_owin]
+airbnb_july2021_private_ppp_sg = airbnb_july2021_private_ppp[sg_owin]
+airbnb_july2021_home_ppp_sg = airbnb_july2021_home_ppp[sg_owin]
+airbnb_july2021_share_ppp_sg = airbnb_july2021_share_ppp[sg_owin]
+airbnb_july2021_hotelroom_ppp_sg = airbnb_july2021_hotelroom_ppp[sg_owin]
+```
+
+#### Computing KDE
+
+```{r}
+kde_airbnb_june2019_private_bw <- density(airbnb_june2019_private_ppp_sg,
+                              sigma=bw.diggle,
+                              edge=TRUE,
+                            kernel="gaussian")
+kde_airbnb_june2019_home_bw <- density(airbnb_june2019_home_ppp_sg,
+                              sigma=bw.diggle,
+                              edge=TRUE,
+                            kernel="gaussian")
+kde_airbnb_june2019_share_bw <- density(airbnb_june2019_share_ppp_sg,
+                              sigma=bw.diggle,
+                              edge=TRUE,
+                            kernel="gaussian")
+kde_airbnb_july2021_private_bw <- density(airbnb_july2021_private_ppp_sg,
+                              sigma=bw.diggle,
+                              edge=TRUE,
+                            kernel="gaussian")
+kde_airbnb_july2021_home_bw <- density(airbnb_july2021_home_ppp_sg,
+                              sigma=bw.diggle,
+                              edge=TRUE,
+                            kernel="gaussian")
+kde_airbnb_july2021_share_bw <- density(airbnb_july2021_share_ppp_sg,
+                              sigma=bw.diggle,
+                              edge=TRUE,
+                            kernel="gaussian")
+kde_airbnb_july2021_hotelroom_bw <- density(airbnb_july2021_hotelroom_ppp_sg,
+                              sigma=bw.diggle,
+                              edge=TRUE,
+                            kernel="gaussian")
+```
