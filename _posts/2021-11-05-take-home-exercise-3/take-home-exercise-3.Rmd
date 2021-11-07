@@ -1,0 +1,647 @@
+---
+title: "Take-home Exercise 3"
+description: |
+  In this Take-home Exericse, hedonic pricing models will be build to explain the factors affecting resale prcies of public housing in Singapore. The hedonic price models will be built using approriate Geographical Weighted Regression (GWR) methods. 
+author:
+  - name: Ngah Xin Yan
+    url: https://github.com/nxinyan/
+date: 11-05-2021
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      eval = TRUE,
+                      message = FALSE,
+                      warning = FALSE,
+                      fig.retina = 3)
+```
+
+## Overview
+
+When buying a house, it is generally a major investment for most people. There are many factors that affects the housing prices, such as inflation rates, economy of country, which are more global in nature. There are other factors that are specific to the properties itself also, which can be further divided to structural and locational factors. Structural factors are variables related to the property themselves such as the size, fitting, and tenure of the property. Locational factors are variables related to the neighbourhood of the properties such as proximity to childcare centre, public transport service and shopping centre.
+
+The effect of housing factors in relation to price will be examined using hedonic pricing models. Ordinary Least Square (OLS) method is used to built the model, however it fails to take into consideration that spatial autocorrelation and spatial heterogeneity exist in geographic data sets such as housing transactions. The estimation of OLS of hedonic pricing models could lead to biased, inconsistent or inefficient results. GWR was introduced to calibrate hedonic price model for housing to due with this limitation.
+
+## Objective 
+
+To build hedonic pricing models to explain factors affecting the resale prices of public housing in Singapore. Appropriare GWR methods must be used to built these models.
+
+## Dataset Used
+
+- **Resale Flat Prices**: Resale transacted prices, focusing on 4-room flats in the transaction period from 1st January 2019 to 30th September 2020 (csv file) from [data.gov.sg](https://data.gov.sg/dataset/resale-flat-prices)
+- **MRTLRTStnPtt**: All MRT and LRT stations in Singapore (shp file) from [LTA Datamall](https://datamall.lta.gov.sg/content/datamall/en/search_datasets.html?searchText=mrt)
+- **Childcare Services**: Location of childcare services (geojson file) from [data.gov.sg](https://data.gov.sg/dataset/child-care-services)
+- **Eldercare Services**: GIS data showing location of eldercare service (shp file) from [data.gov.sg](https://data.gov.sg/dataset/eldercare-services)
+- **Parks**: Location of parks (geojson file) from [data.gov.sg](https://data.gov.sg/dataset/parks)
+- **MP14_SUBZONE_WEB_PL**: URA 2014 Master Plan Planning Subzone Boundary Data (shp file) from [data.gov.sg](https://data.gov.sg/dataset/master-plan-2014-subzone-boundary-web)
+- **Pre-School**: Location of pre-schools (geojson file) from [data.gov.sg](https://data.gov.sg/dataset/parks)
+- **Supermarket**: Location of supermarkets (geojson file) from [data.gov.sg](https://data.gov.sg/dataset/supermarkets)
+
+## Installing and Loading the R packages
+
+- [**olsrr**](https://olsrr.rsquaredacademy.com/index.html): for building OLS and performing diagnostics tests
+
+- [**GWmodel**](https://cran.r-project.org/web/packages/GWmodel/index.html): to calibrate geographical weighted family of models
+
+- [**corrplot**](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html): for multivariate data visualisation and analysis
+
+- [**tmap**](https://cran.r-project.org/web/packages/tmap/index.html): to plot cartographic quality static point patterns maps or interactive maps by using leaflet API
+
+- [**httr**](https://cran.r-project.org/web/packages/httr/index.html): Useful tools for working with HTTP organised by HTTP verbs (GET(), POST(), etc)
+
+- **sf**: used to import, manage and process vector-based geospatial data in R.
+
+- **tidyverse**: attribute data handling
+
+```{r}
+packages = c('olsrr', 'corrplot', 'ggpubr', 'sf', 'spdep', 'GWmodel', 'tmap', 'tidyverse', 'httr', 'sp', 'matrixStats')
+for (p in packages){
+  if(!require(p, character.only = T)){
+    install.packages(p)
+  }
+  library(p,character.only = T)
+}
+```
+
+# Handling Geospatial Data
+
+## Importing Geospatial Data
+
+```{r}
+childcare_sf <- st_read("data/geospatial/child-care-services-geojson.geojson")
+```
+
+```{r}
+eldercare_sf <- st_read(dsn = "data/geospatial", layer="ELDERCARE")
+```
+
+```{r}
+mrtlrt_sf <- st_read(dsn = "data/geospatial", layer="MRTLRTStnPtt")
+```
+
+```{r}
+park_sf <- st_read("data/geospatial/parks-geojson.geojson")
+```
+
+```{r}
+presch_sf <- st_read("data/geospatial/pre-schools-location-geojson.geojson")
+```
+
+```{r}
+supermarket_sf <- st_read("data/geospatial/supermarkets-geojson.geojson")
+```
+
+```{r}
+mpsz_sf <- st_read(dsn="data/geospatial",
+               layer="MP14_SUBZONE_WEB_PL")
+```
+
+## Checking for invalid geometries
+
+```{r}
+length(which(st_is_valid(childcare_sf) == FALSE))
+```
+
+```{r}
+length(which(st_is_valid(eldercare_sf) == FALSE))
+```
+
+```{r}
+length(which(st_is_valid(mrtlrt_sf) == FALSE))
+```
+
+```{r}
+length(which(st_is_valid(park_sf) == FALSE))
+```
+
+```{r}
+length(which(st_is_valid(presch_sf) == FALSE))
+```
+
+```{r}
+length(which(st_is_valid(supermarket_sf) == FALSE))
+```
+
+```{r}
+length(which(st_is_valid(mpsz_sf) == FALSE))
+```
+
+No invalid geometries is observed in *childcare_sf*, *eldercare_sf*, *mrtlrt_sf*, *presch_sf*, *park_sf* and *supermarket_sf* data frames. However, *mpsz_sf* data frame consists of 9 invalid geometries. The invalid geometries will be removed in the *mpsz_sf* data frame using *st_make_valid()* and check for any invalid geometries again.
+
+```{r}
+mpsz_sf <- st_make_valid(mpsz_sf)
+length(which(st_is_valid(mpsz_sf) == FALSE))
+```
+
+## Checking for missing values
+
+```{r}
+childcare_sf[rowSums(is.na(childcare_sf))!=0,]
+```
+
+```{r}
+eldercare_sf[rowSums(is.na(eldercare_sf))!=0,]
+```
+
+```{r}
+mrtlrt_sf[rowSums(is.na(mrtlrt_sf))!=0,]
+```
+
+```{r}
+park_sf[rowSums(is.na(park_sf))!=0,]
+```
+
+```{r}
+presch_sf[rowSums(is.na(presch_sf))!=0,]
+```
+
+```{r}
+supermarket_sf[rowSums(is.na(supermarket_sf))!=0,]
+```
+
+```{r}
+mpsz_sf[rowSums(is.na(mpsz_sf))!=0,]
+```
+
+Only *eldercare_sf* contains missing values. Columns with missing values are removed.
+
+```{r}
+eldercare_sf = select(eldercare_sf, -3, -4, -7,-8, -9, -13, -14, -17)
+```
+
+Checking for missing values again
+
+```{r}
+eldercare_sf[rowSums(is.na(eldercare_sf))!=0,]
+```
+
+## Checking for duplicates
+
+```{r}
+any(duplicated(childcare_sf))
+```
+
+```{r}
+any(duplicated(eldercare_sf))
+```
+
+```{r}
+any(duplicated(mrtlrt_sf))
+```
+
+```{r}
+any(duplicated(park_sf))
+```
+
+```{r}
+any(duplicated(presch_sf))
+```
+
+```{r}
+any(duplicated(supermarket_sf))
+```
+
+```{r}
+any(duplicated(mpsz_sf))
+```
+
+There is no duplicated in the data sets above.
+
+## Checking of coordinate reference system (CRS)
+
+*st_crs()* of **sf** package is used to display the coordinate reference system information.
+
+```{r}
+st_crs(childcare_sf)
+```
+
+```{r}
+st_crs(eldercare_sf)
+```
+
+```{r}
+st_crs(mrtlrt_sf)
+```
+
+```{r}
+st_crs(park_sf)
+```
+
+```{r}
+st_crs(presch_sf)
+```
+
+```{r}
+st_crs(supermarket_sf)
+```
+
+```{r}
+st_crs(mpsz_sf)
+```
+
+From the output above, there are datasets that has EPSG code of 4326. and 9001 The correct coordinate system code for SVY21 is 3414 instead of 4326 and 9001. *st_transform()* of **sf** package will be used to assign the correct EPSG code to all data frames.
+
+```{r}
+childcare_sf <- st_transform(childcare_sf, 3414)
+```
+
+```{r}
+eldercare_sf <- st_transform(eldercare_sf, 3414)
+```
+
+```{r}
+mrtlrt_sf <- st_transform(mrtlrt_sf, 3414)
+```
+
+```{r}
+park_sf <- st_transform(park_sf, 3414)
+```
+
+```{r}
+presch_sf <- st_transform(presch_sf, 3414)
+```
+
+```{r}
+supermarket_sf <- st_transform(supermarket_sf, 3414)
+```
+
+```{r}
+mpsz_sf <- st_transform(mpsz_sf, 3414)
+```
+
+Checking CRS again
+
+```{r}
+st_crs(childcare_sf)
+```
+
+```{r}
+st_crs(eldercare_sf)
+```
+
+```{r}
+st_crs(mrtlrt_sf)
+```
+
+```{r}
+st_crs(park_sf)
+```
+
+```{r}
+st_crs(presch_sf)
+```
+
+```{r}
+st_crs(supermarket_sf)
+```
+
+```{r}
+st_crs(mpsz_sf)
+```
+
+All dataframes has the EPSG code of 3414 now.
+
+## Displaying basic information of the data frames
+
+```{r}
+st_geometry(childcare_sf)
+```
+
+```{r}
+st_geometry(eldercare_sf)
+```
+
+```{r}
+st_geometry(mrtlrt_sf)
+```
+
+```{r}
+st_geometry(park_sf)
+```
+
+```{r}
+st_geometry(presch_sf)
+```
+
+```{r}
+st_geometry(supermarket_sf)
+```
+
+```{r}
+st_geometry(mpsz_sf)
+```
+All geometry type are points except for mpsz_sf which
+
+## Visualisation of Geospatial Data
+
+For childcare and eldercare
+
+```{r}
+tmap_mode('view')
+tm_shape(mpsz_sf) +
+  tm_polygons() +
+tm_shape(childcare_sf) +
+  tm_dots(col="red") +
+tm_shape(eldercare_sf) + 
+  tm_dots(col="blue") +
+  tm_view(set.zoom.limits = c(11,14))
+tmap_mode('plot')
+```
+
+For mrtlrt and park
+
+```{r}
+tmap_mode('view')
+tm_shape(mpsz_sf) +
+  tm_polygons() +
+tm_shape(mrtlrt_sf) +
+  tm_dots(col="red") +
+tm_shape(park_sf) + 
+  tm_dots(col="blue") +
+  tm_view(set.zoom.limits = c(11,14))
+tmap_mode('plot')
+```
+
+For pre school and supermarket
+
+```{r}
+tmap_mode('view')
+tm_shape(mpsz_sf) +
+  tm_polygons() +
+tm_shape(presch_sf) +
+  tm_dots(col="red") +
+tm_shape(supermarket_sf) + 
+  tm_dots(col="blue") +
+  tm_view(set.zoom.limits = c(11,14))
+tmap_mode('plot')
+```
+
+# Handling Aspatial Data
+
+## Importing Aspatial Data
+
+Importing the dataset into R dataframe by using *read_csv()* function of **readr** package in **tidyverse**:
+
+```{r}
+hdb_resale <- read_csv("data/aspatial/resale-flat-prices-based-on-registration-date-from-jan-2017-onwards.csv")
+```
+
+Use ***glimpse()*** to learn more about the attribute information in the data frame.
+
+```{r eval=FALSE}
+glimpse(hdb_resale)
+```
+
+For this Take-Home Exercise, we will only focus on four-room flats transacted from 1st January 2019 to 30th September 2020. Thus, the data set will be filtered according to the focus.
+
+## Filtering data frame for relevant data
+
+*filter()* function of **dplyr** package in **tidyverse** is used to filter the data of 4-room flats from 1st January 2019 to 30th September 2020 
+
+*mutate()* function of **dplyr** package in **tidyverse** is used to add two new columns to ***hdbresale_jan19sep20***: address (consisting of block and street name) and remaininglease_years (remaining lease in terms of years only) 
+
+```{r}
+hdb_resale_jan19sep20 <- hdb_resale %>%
+                filter(month %in% c("2019-01", "2019-02", "2019-03", "2019-04", "2019-05", "2019-06", "2019-07", "2019-08", "2019-09", "2019-10", "2019-11", "2019-12","2020-01", "2020-02", "2020-03", "2020-04", "2020-05", "2020-06", "2020-07", "2020-08", "2020-09")) %>%
+                filter(flat_type == "4 ROOM")
+
+remaining_lease_list <- strsplit(hdb_resale_jan19sep20$remaining_lease, " ")
+hdb_resale_jan19sep20$remaininglease_years <- 0
+for (x in 1:length(remaining_lease_list)) {
+  if (length(unlist(remaining_lease_list[x])) > 2) {
+      year <- as.numeric(unlist(remaining_lease_list[x])[1])
+      month <- as.numeric(unlist(remaining_lease_list[x])[3])
+      hdb_resale_jan19sep20$remaininglease_years[x] <- year + round(month/12, 2)
+  }
+  else {
+    year <- as.numeric(unlist(remaining_lease_list[x])[1])
+    hdb_resale_jan19sep20$remaininglease_years[x] <- year
+  }
+}
+
+hdb_resale_data <- hdb_resale_jan19sep20 %>%
+                  mutate(hdb_resale_jan19sep20, address = paste(block, street_name)) %>%
+                  select(month, town, flat_type, address, block, street_name, storey_range, floor_area_sqm, flat_model, lease_commence_date, remaining_lease, remaininglease_years, resale_price)
+hdb_resale_data
+```
+
+There is a total of 15901 4-room flat transactions from 1st January 2019 to 30 September 2020 after filtering.
+
+It is noticed that street name such as "ST. GEORGE'S" has problem when obtaining the latitude and longitude in the later part. The short form "ST." is replaced with its full name "SAINT".
+
+```{r}
+hdb_resale_data$address <- sub('ST\\.','SAINT',hdb_resale_data$address)
+```
+
+## Getting coordinates (latitude and longitude) for each 4-room flat 
+
+To get the coordinates for each 4-room flat, the *address* column in ***hdb_resale_data*** is used in OneMap Search API which returns search results with both latitude and longitude. Obtain the result using *GET()* function of **httr** package and add the values of the new columns, **LATITUDE** and **LONGITUDE** respectively into each row of ***hdb_resale_data***.
+
+```{r eval=FALSE}
+for (x in 1:nrow(hdb_resale_data)) {
+  address <- hdb_resale_data[x,'address']
+  
+  url = paste('https://developers.onemap.sg/commonapi/search?searchVal=', address, '&returnGeom=Y&getAddrDetails=Y&pageNum=1')
+  latlong_url <- URLencode(url)
+  
+  latlong <- GET(latlong_url)
+  
+  jsonlatlong <- content(latlong,as="parsed")
+  
+  if (length(jsonlatlong$results) > 0) {
+    hdb_resale_data[x,'LATITUDE'] = jsonlatlong$results[[1]]$LATITUDE
+    hdb_resale_data[x,'LONGITUDE'] = jsonlatlong$results[[1]]$LONGITUDE
+  }
+}
+```
+
+## Checking the rows for any missing data in the LATITUDE and LONGITUDE column
+
+*is.na()* is used to check for the total number of missing value (NA)
+
+```{r}
+sum(is.na(hdb_resale_data$LATITUDE))
+sum(is.na(hdb_resale_data$LONGITUDE))
+```
+
+There is no missing data observed.
+
+## Creating a csv to keep the results above
+
+To avoid going through the long process above again, data will be exported to the new csv.
+
+```{r eval=FALSE}
+write.csv(hdb_resale_data, "data/aspatial/hdb_resale_latlong.csv", row.names = FALSE)
+```
+
+## Structural Factors
+
+### Importing the updated csv file
+
+```{r}
+resale_data <- read_csv("data/aspatial/hdb_resale_latlong.csv")
+```
+
+### Remaining Lease
+
+Obtain from the column **remaininglease_years** which was converted from **remaining_lease** into years as a unit instead of years and months.
+
+```{r}
+lease <- resale_data$remaininglease_years
+```
+
+### Floor Level
+
+The floor level is provided in a range instead of individual levels. *unique()* of the **base** function is used to identify the unique level range.
+
+```{r}
+length(unique(resale_data$storey_range))
+```
+
+There is 17 unique floor level range.
+
+## Locational Factors
+
+### Creating a simple feature data frame from an aspatial data frame
+
+```{r}
+resale_data_sf <- st_as_sf(resale_data, 
+                         coords = c("LONGITUDE", "LATITUDE"), crs=4326) %>%
+  st_transform(crs = 3414)
+```
+
+```{r}
+resale_data_sf <- st_as_sf(resale_data, 
+                         coords = c("LONGITUDE", "LATITUDE"), crs=4326) %>%
+  st_transform(crs = 3414)
+```
+
+```{r}
+resale_geometry <- st_coordinates(resale_data_sf$geometry)
+eldercare_geometry <- st_coordinates(eldercare_sf$geometry)
+dist_resale_eldercare <- spDists(resale_geometry, eldercare_geometry, longlat=FALSE)
+```
+
+### Computing proximity matrix
+
+Create a function to get the distance between the HDB Flat and factors mentioned in the dataset using *st_distance()* from **sf** package and dist() is used to calculate the euclidean distance
+
+```{r}
+proximity <- function(df_1, df_2, var) {
+  
+  df_1_geometry <- st_coordinates(df_1$geometry)
+  df_2_geometry <- st_coordinates(df_2$geometry)
+  df_2_geometry <- df_2_geometry[,c(1,2)]
+  dist_matrix <- spDists(df_1_geometry, df_2_geometry, longlat=FALSE)
+  dist_matrix_df <- data.frame(dist_matrix) 
+  dist_matrix_min <- dist_matrix_df %>% rowwise() %>% mutate(Min = min(c_across(1:(ncol(dist_matrix_df)))))
+  df_1[,var] <- dist_matrix_min$Min/1000
+  
+  return(df_1)
+}
+```
+
+```{r eval=FALSE}
+resale_data_sf <- proximity(resale_data_sf, eldercare_sf, "PROX_ELDERCARE")
+```
+
+```{r eval=FALSE}
+resale_data_sf <- proximity(resale_data_sf, park_sf, "PROX_PARK")
+```
+
+```{r eval=FALSE}
+resale_data_sf <- proximity(resale_data_sf, childcare_sf, "PROX_CHILDCARE")
+```
+
+```{r eval=FALSE}
+resale_data_sf <- proximity(resale_data_sf, mrtlrt_sf, "PROX_MRTLRT")
+```
+
+```{r eval=FALSE}
+resale_data_sf <- proximity(resale_data_sf, presch_sf, "PROX_PRESCH")
+```
+
+```{r eval=FALSE}
+resale_data_sf <- proximity(resale_data_sf, supermarket_sf, "PROX_SUPERMARKET")
+```
+
+## Creating a csv to keep the results above
+
+```{r eval=FALSE}
+write.csv(resale_data_sf, "data/aspatial/resale_final.csv", row.names = FALSE)
+```
+
+# Exploratory Data Analysis
+
+## Importing Final Dataset
+
+```{r}
+resale_data <- read_csv("data/aspatial/resale_final.csv")
+```
+
+## EDA using statistical graphics
+
+Plotting the distribution of ***resale_price*** by using appropriate Exploratory Data Analysis (EDA) 
+
+```{r}
+ggplot(data=resale_data, aes(x=`resale_price`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+```
+
+The figure above reveals a **right skewed distribution**. This means that more 4 room type units were transacted at **relative lower prices**.
+
+Statistically, the skewed distribution can be **normalised** by using **log transformation**. *mutate()* of **dplyr** package is used too add a new variable called **log_resale_price** using a log transformation on the variable **resale_price**.
+
+```{r}
+resale_data <- resale_data %>%
+  mutate(`log_resale_price` = log(resale_price))
+```
+
+Plotting the distribution of **log_resale_price**
+
+```{r}
+ggplot(data=resale_data, aes(x=`log_resale_price`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+
