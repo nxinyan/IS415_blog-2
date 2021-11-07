@@ -642,7 +642,7 @@ The distribution is relatively less skewed after the transformation.
 Drawing 12 small multiple histograms (also known as trellis plot) by using *ggarrange()* of **ggpubr** package.
 
 ```{r}
-resale_data$remaininglease_years <- as.numeric(resale_data_sf$remaininglease_years)
+resale_data_sf$remaininglease_years <- as.numeric(resale_data_sf$remaininglease_years)
 ```
 
 ```{r}
@@ -678,9 +678,6 @@ The distribution of the majority of the independent variables are right skewed, 
 ## Drawing Statistical Point Map
 
 Revealing the geospatial distribution 4-room type unit resale prices in Singapore using **tmap** package
-```{r}
-resale_data_sf <- st_transform(crs=3414)
-```
 
 ```{r}
 tmap_mode("view")
@@ -812,7 +809,7 @@ summary(nb_lw)
 Next, lm.morantest() of spdep package will be used to perform Moran’s I test for residual spatial autocorrelation
 
 ```{r}
-lm.morantest(condo.mlr1, nb_lw)
+lm.morantest(resale.mlr1, nb_lw)
 ```
 
 # Building Hedonic Pricing Models using GWmodel
@@ -827,15 +824,15 @@ bw.ger() to determine the recommended data point to use.
 bw_adaptive <- bw.gwr(formula = resale_price ~ AREA_SQM + PROX_CHILDCARE + PROX_ELDERCARE  +  PROX_MRTLRT  + PROX_PARK  + PROX_SUPERMARKET + remaininglease_years, data=resale.sp, approach="CV", kernel="gaussian",
                       adaptive=TRUE, longlat=FALSE)
 ```
+```{r}
+bw_adaptive
+```
+
+The result shows that the 30 is the recommended data points to be used.
 
 ### Constructing the adaptive bandwidth gwr model
 
 Calibrating the gwr-based hedonic pricing model by using adaptive bandwidth and gaussian kernel.
-
-```{r}
-bw_adaptive <- bw.gwr(formula = resale_price ~ AREA_SQM + PROX_CHILDCARE + PROX_ELDERCARE  +  PROX_MRTLRT  + PROX_PARK  + PROX_SUPERMARKET + remaininglease_years, data=resale.sp, approach="CV", kernel="gaussian",
-                      adaptive=TRUE, longlat=FALSE)
-```
 
 ```{r}
 gwr_adaptive <- gwr.basic(formula = resale_price ~ AREA_SQM + PROX_CHILDCARE + PROX_ELDERCARE  +  PROX_MRTLRT  + PROX_PARK  + PROX_SUPERMARKET + remaininglease_years, data=resale.sp, bw=bw_adaptive, 
@@ -851,7 +848,7 @@ The report shows that the adjusted r-square of the gwr is 0.8561 which is signif
 ## Converting SDF into sf data.frame
 
 ```{r}
-resale_sf_adaptive <- st_as_sf(gwr.adaptive$SDF) %>%
+resale_sf_adaptive <- st_as_sf(gwr_adaptive$SDF) %>%
   st_transform(crs=3414)
 ```
 
@@ -861,7 +858,7 @@ resale_sf_adaptive_svy21
 ```
 
 ```{r}
-gwr.adaptive.output <- as.data.frame(gwr.adaptive$SDF)
+gwr.adaptive.output <- as.data.frame(gwr_adaptive$SDF)
 resale_sf_adaptive <- cbind(resale.res.sf, as.matrix(gwr.adaptive.output))
 ```
 
@@ -870,7 +867,7 @@ glimpse(resale_sf_adaptive)
 ```
 
 ```{r}
-summary(gwr.adaptive$SDF$yhat)
+summary(gwr_adaptive$SDF$yhat)
 ```
 
 ## Visualising local R2
@@ -893,7 +890,7 @@ tmap_mode("plot")
 ## By URA Plannign Region
 
 ```{r}
-tm_shape(mpsz_svy21[mpsz_sf$REGION_N=="CENTRAL REGION", ])+
+tm_shape(mpsz_sf[mpsz_sf$REGION_N=="CENTRAL REGION", ])+
   tm_polygons()+
 tm_shape(resale_sf_adaptive) + 
   tm_bubbles(col = "Local_R2",
