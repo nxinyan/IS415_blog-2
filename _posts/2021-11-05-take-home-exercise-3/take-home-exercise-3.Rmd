@@ -58,7 +58,7 @@ To build hedonic pricing models to explain factors affecting the resale prices o
 - **tidyverse**: attribute data handling
 
 ```{r}
-packages = c('olsrr', 'corrplot', 'ggpubr', 'sf', 'spdep', 'GWmodel', 'tmap', 'tidyverse', 'httr', 'sp', 'matrixStats')
+packages = c('olsrr', 'corrplot', 'ggpubr', 'sf', 'spdep', 'GWmodel', 'tmap', 'tidyverse', 'httr', 'sp')
 for (p in packages){
   if(!require(p, character.only = T)){
     install.packages(p)
@@ -514,18 +514,6 @@ resale_data_sf <- st_as_sf(resale_data,
   st_transform(crs = 3414)
 ```
 
-```{r}
-resale_data_sf <- st_as_sf(resale_data, 
-                         coords = c("LONGITUDE", "LATITUDE"), crs=4326) %>%
-  st_transform(crs = 3414)
-```
-
-```{r}
-resale_geometry <- st_coordinates(resale_data_sf$geometry)
-eldercare_geometry <- st_coordinates(eldercare_sf$geometry)
-dist_resale_eldercare <- spDists(resale_geometry, eldercare_geometry, longlat=FALSE)
-```
-
 ### Computing proximity matrix
 
 Create a function to get the distance between the HDB Flat and factors mentioned in the dataset using *st_distance()* from **sf** package and dist() is used to calculate the euclidean distance
@@ -569,10 +557,42 @@ resale_data_sf <- proximity(resale_data_sf, presch_sf, "PROX_PRESCH")
 resale_data_sf <- proximity(resale_data_sf, supermarket_sf, "PROX_SUPERMARKET")
 ```
 
-## Creating a csv to keep the results above
+```{r eval=FALSE, echo=FALSE}
+resale_geometry <- st_coordinates(resale_data_sf$geometry)
+eldercare_geometry <- st_coordinates(eldercare_sf$geometry)
+dist_resale_eldercare <- spDists(resale_geometry, eldercare_geometry, longlat=FALSE)
+```
+
+```{r eval=FALSE, echo=FALSE}
+dist_resale_eldercare_df <- data.frame(dist_resale_eldercare)
+dist_resale_eldercare_df_min <- dist_resale_eldercare_df %>% rowwise() %>% mutate(Min = min(c_across(X1:X120)))
+PROX_ELDERCARE <- dist_resale_eldercare_df_min$Min/1000
+resale_data_sf <- cbind(resale_data_sf, PROX_ELDERCARE)
+```
+
+```{r eval=FALSE, echo=FALSE}
+resale_geometry <- st_coordinates(resale_data_sf$geometry)
+supermarket_geom <- st_coordinates(supermarket_sf$geometry)
+supermarket_geom <- supermarket_geom[,c(1,2)]
+dist_resale_super <- spDists(resale_geometry, supermarket_geom, longlat=FALSE)
+```
+
+```{r eval=FALSE, echo=FALSE}
+dist_resale_eldercare_df <- data.frame(dist_resale_super)
+dist_resale_eldercare_df_min <- dist_resale_eldercare_df %>% rowwise() %>% mutate(Min = min(c_across(X1:X526)))
+PROX_SUPERMARKET <- dist_resale_eldercare_df_min$Min/1000
+resale_data_sf <- cbind(resale_data_sf, PROX_SUPERMARKET)
+```
+
+## Creating a shp file to keep the results above
+
+```{r eval=FALSE }
+resale_data_sf = select(resale_data_sf, -1, -2, -3, -5, -6, -9, -10, -11)
+resale_data_sf = select(resale_data_sf, -10, -11)
+```
 
 ```{r eval=FALSE}
-write.csv(resale_data_sf, "data/aspatial/resale_final.csv", row.names = FALSE)
+st_write(resale_data_sf, "data/geospatial/resale_data_final_neww.shp")
 ```
 
 # Exploratory Data Analysis
@@ -580,7 +600,14 @@ write.csv(resale_data_sf, "data/aspatial/resale_final.csv", row.names = FALSE)
 ## Importing Final Dataset
 
 ```{r}
-resale_data <- read_csv("data/aspatial/resale_final.csv")
+resale_data_sf <- st_read(dsn="data/geospatial",
+                          layer="resale_data_final_neww")
+```
+
+```{r}
+resale_data_sf <- resale_data_sf %>%
+  rename("AREA_SQM" = "flr_r_s", "remaininglease_years" = "rmnngl_", 
+         "resale_price"= "rsl_prc", "PROX_PARK" = "PROX_PA", "PROX_CHILDCARE" = "PROX_CH", "PROX_MRTLRT" = "PROX_MR", "PROX_PRESCH" = "PROX_PR", "PROX_ELDERCARE" = "PROX_EL", "PROX_SUPERMARKET" = "PROX_SU")
 ```
 
 ## EDA using statistical graphics
@@ -588,7 +615,7 @@ resale_data <- read_csv("data/aspatial/resale_final.csv")
 Plotting the distribution of ***resale_price*** by using appropriate Exploratory Data Analysis (EDA) 
 
 ```{r}
-ggplot(data=resale_data, aes(x=`resale_price`)) +
+ggplot(data=resale_data_sf, aes(x=`resale_price`)) +
   geom_histogram(bins=20, color="black", fill="light blue")
 ```
 
@@ -597,47 +624,282 @@ The figure above reveals a **right skewed distribution**. This means that more 4
 Statistically, the skewed distribution can be **normalised** by using **log transformation**. *mutate()* of **dplyr** package is used too add a new variable called **log_resale_price** using a log transformation on the variable **resale_price**.
 
 ```{r}
-resale_data <- resale_data %>%
+resale_data_sf <- resale_data_sf %>%
   mutate(`log_resale_price` = log(resale_price))
 ```
 
 Plotting the distribution of **log_resale_price**
 
 ```{r}
-ggplot(data=resale_data, aes(x=`log_resale_price`)) +
+ggplot(data=resale_data_sf, aes(x=`log_resale_price`)) +
   geom_histogram(bins=20, color="black", fill="light blue")
 ```
 
+The distribution is relatively less skewed after the transformation.
+
+## Multiple Histogram Plots distribution of variables
+
+Drawing 12 small multiple histograms (also known as trellis plot) by using *ggarrange()* of **ggpubr** package.
+
 ```{r}
+resale_data$remaininglease_years <- as.numeric(resale_data_sf$remaininglease_years)
+```
+
+```{r}
+AREA_SQM <- ggplot(data=resale_data_sf, aes(x= `AREA_SQM`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+remaininglease_years <- ggplot(data=resale_data_sf, aes(x= `remaininglease_years`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_CHILDCARE <- ggplot(data=resale_data_sf, aes(x= `PROX_CHILDCARE`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_ELDERCARE <- ggplot(data=resale_data_sf, aes(x= `PROX_ELDERCARE`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_SUPERMARKET <- ggplot(data=resale_data_sf, aes(x= `PROX_SUPERMARKET`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_PRESCH <- ggplot(data=resale_data_sf, aes(x= `PROX_PRESCH`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_MRTLRT <- ggplot(data=resale_data_sf, aes(x= `PROX_MRTLRT`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+PROX_PARK <- ggplot(data=resale_data_sf, aes(x= `PROX_PARK`)) +
+  geom_histogram(bins=20, color="black", fill="light blue")
+
+ggarrange(remaininglease_years, PROX_PRESCH, PROX_PARK, PROX_MRTLRT, PROX_CHILDCARE, AREA_SQM, PROX_ELDERCARE, PROX_SUPERMARKET, ncol = 3, nrow = 3)
+```
+
+The distribution of the majority of the independent variables are right skewed, only remaininglease_years is slightly left skewed.
+
+## Drawing Statistical Point Map
+
+Revealing the geospatial distribution 4-room type unit resale prices in Singapore using **tmap** package
+```{r}
+resale_data_sf <- st_transform(crs=3414)
+```
+
+```{r}
+tmap_mode("view")
+
+tm_shape(mpsz_sf)+
+  tm_polygons() +
+tm_shape(resale_data_sf) +  
+  tm_dots(col = "resale_price",
+          alpha = 0.6,
+          style="quantile") +
+  tm_view(set.zoom.limits = c(11,14))
+```
+
+The units around the central area of Singapore tends to be dense with higher resale prices.
+
+# Hedonic Pricing Modelling in R
+
+Building hedonic pricing models for 4 room type resale units using lm() of R base.
+
+## Multiple Linear Regression Method
+
+### Visualising the relationships of the independent variables
+
+Before building a multiple regression model, it is important to ensure that the indepdent variables used are not highly correlated to each other. If these highly correlated independent variables are used in building a regression model by mistake, the quality of the model will be compromised. This phenominan is known as multicollinearity in statistics.
+
+Correlation matrix is commonly used to visualise the relationships between the independent variables. Beside the pairs() of R, there are many packages support the display of a correlation matrix. In this section, the corrplot package will be used.
+
+```{r}
+resale_data <- resale_data_sf %>%
+  st_set_geometry(NULL)
+```
+
+```{r}
+corrplot(cor(resale_data[, 3:11]), diag = FALSE, order = "AOE",
+         tl.pos = "td", tl.cex = 0.5, method = "number", type = "upper")
+```
+Leaving out PROX_PRESCH
+
+### Building the Hedonic Pricing Model
+
+lm() is used to calibrate the multiple linear regression model.
+
+```{r}
+resale.mlr <- lm(formula = resale_price ~ AREA_SQM + PROX_CHILDCARE + PROX_ELDERCARE  +  PROX_MRTLRT  + PROX_PARK  + PROX_SUPERMARKET + remaininglease_years, data=resale_data_sf)
+summary(resale.mlr)
+```
+
+```{r}
+resale.mlr1 <- lm(formula = resale_price ~ AREA_SQM + PROX_CHILDCARE + PROX_ELDERCARE  + PROX_MRTLRT  + PROX_PARK  + PROX_SUPERMARKET + remaininglease_years, data=resale_data_sf)
+
+ols_regress(resale.mlr1)
+```
+
+### Checking for multicolinearity
+
+```{r}
+ols_vif_tol(resale.mlr1)
+```
+
+Since the VIF of the independent variables are less than 10. We can safely conclude that there are no sign of multicollinearity among the independent variables.
+
+### Test for Non-Linearity
+
+ols_plot_resid_fit() of olsrr package is used to perform linearity assumption test.
+
+```{r}
+ols_plot_resid_fit(resale.mlr1)
+```
+
+### Test for Normality Assumption
+
+ols_plot_resid_hist() of olsrr package to perform normality assumption test.
+
+```{r}
+ols_plot_resid_hist(resale.mlr1)
+```
+
+### Testing for Spatial Autocorrelation
+
+```{r}
+mlr.output <- as.data.frame(resale.mlr1$residuals)
+```
+
+```{r}
+resale.res.sf <- cbind(resale_data_sf, 
+                        resale.mlr1$residuals) %>%
+rename(`MLR_RES` = `resale.mlr1.residuals`)
+```
+
+```{r}
+resale.sp <- as_Spatial(resale.res.sf)
+resale.sp
+```
+
+```{r}
+tmap_mode("view")
+tm_shape(mpsz_sf)+
+  tm_polygons(alpha = 0.4) +
+tm_shape(resale.res.sf) +  
+  tm_dots(col = "MLR_RES",
+          alpha = 0.6,
+          style="quantile") +
+  tm_view(set.zoom.limits = c(11,14))
 
 ```
 
 ```{r}
+tmap_mode("plot")
+```
 
+The figure above reveal that there is sign of spatial autocorrelation.
+
+To proof that our observation is indeed true, the Moran’s I test will be performed
+
+First, we will compute the distance-based weight matrix by using dnearneigh() function of spdep.
+
+```{r}
+nb <- dnearneigh(coordinates(resale.sp), 0, 1500, longlat = FALSE)
+summary(nb)
+```
+
+Next, nb2listw() of spdep packge will be used to convert the output neighbours lists (i.e. nb) into a spatial weights.
+
+```{r}
+nb_lw <- nb2listw(nb, style = 'W')
+summary(nb_lw)
+```
+
+Next, lm.morantest() of spdep package will be used to perform Moran’s I test for residual spatial autocorrelation
+
+```{r}
+lm.morantest(condo.mlr1, nb_lw)
+```
+
+# Building Hedonic Pricing Models using GWmodel
+
+## Building Adaptive Bandwidth GWR Model
+
+### Computing the adaptive bandwidth
+
+bw.ger() to determine the recommended data point to use.
+
+```{r}
+bw_adaptive <- bw.gwr(formula = resale_price ~ AREA_SQM + PROX_CHILDCARE + PROX_ELDERCARE  +  PROX_MRTLRT  + PROX_PARK  + PROX_SUPERMARKET + remaininglease_years, data=resale.sp, approach="CV", kernel="gaussian",
+                      adaptive=TRUE, longlat=FALSE)
+```
+
+### Constructing the adaptive bandwidth gwr model
+
+Calibrating the gwr-based hedonic pricing model by using adaptive bandwidth and gaussian kernel.
+
+```{r}
+bw_adaptive <- bw.gwr(formula = resale_price ~ AREA_SQM + PROX_CHILDCARE + PROX_ELDERCARE  +  PROX_MRTLRT  + PROX_PARK  + PROX_SUPERMARKET + remaininglease_years, data=resale.sp, approach="CV", kernel="gaussian",
+                      adaptive=TRUE, longlat=FALSE)
 ```
 
 ```{r}
+gwr_adaptive <- gwr.basic(formula = resale_price ~ AREA_SQM + PROX_CHILDCARE + PROX_ELDERCARE  +  PROX_MRTLRT  + PROX_PARK  + PROX_SUPERMARKET + remaininglease_years, data=resale.sp, bw=bw_adaptive, 
+                      kernel = 'gaussian', adaptive=TRUE, longlat = FALSE)
 
+gwr_adaptive
+```
+
+The report shows that the adjusted r-square of the gwr is 0.8561 which is significantly better than the globel multiple linear regression model of 0.6472.
+
+# Visualising GWR Output
+
+## Converting SDF into sf data.frame
+
+```{r}
+resale_sf_adaptive <- st_as_sf(gwr.adaptive$SDF) %>%
+  st_transform(crs=3414)
 ```
 
 ```{r}
-
+resale_sf_adaptive_svy21 <- st_transform(resale_sf_adaptive, 3414)
+resale_sf_adaptive_svy21  
 ```
 
 ```{r}
-
+gwr.adaptive.output <- as.data.frame(gwr.adaptive$SDF)
+resale_sf_adaptive <- cbind(resale.res.sf, as.matrix(gwr.adaptive.output))
 ```
 
 ```{r}
-
+glimpse(resale_sf_adaptive)
 ```
 
 ```{r}
+summary(gwr.adaptive$SDF$yhat)
+```
 
+## Visualising local R2
+
+```{r}
+tmap_mode("view")
+tm_shape(mpsz_sf)+
+  tm_polygons(alpha = 0.1) +
+tm_shape(resale_sf_adaptive) +  
+  tm_dots(col = "Local_R2",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(11,14))
 ```
 
 ```{r}
+tmap_mode("plot")
+```
 
+## By URA Plannign Region
+
+```{r}
+tm_shape(mpsz_svy21[mpsz_sf$REGION_N=="CENTRAL REGION", ])+
+  tm_polygons()+
+tm_shape(resale_sf_adaptive) + 
+  tm_bubbles(col = "Local_R2",
+           size = 0.15,
+           border.col = "gray60",
+           border.lwd = 1)
 ```
 
 ```{r}
