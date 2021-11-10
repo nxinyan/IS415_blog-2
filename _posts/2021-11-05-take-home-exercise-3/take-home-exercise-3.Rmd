@@ -828,7 +828,7 @@ bw_adaptive <- bw.gwr(formula = resale_price ~ AREA_SQM + PROX_CHILDCARE + PROX_
 bw_adaptive
 ```
 
-The result shows that the 30 is the recommended data points to be used.
+The result shows that the 37 is the recommended data points to be used.
 
 ### Constructing the adaptive bandwidth gwr model
 
@@ -841,7 +841,7 @@ gwr_adaptive <- gwr.basic(formula = resale_price ~ AREA_SQM + PROX_CHILDCARE + P
 gwr_adaptive
 ```
 
-The report shows that the adjusted r-square of the gwr is 0.8561 which is significantly better than the globel multiple linear regression model of 0.6472.
+The report shows that the adjusted r-square of the gwr is 0.9363 which is significantly better than the global multiple linear regression model of 0.2964.
 
 # Visualising GWR Output
 
@@ -887,7 +887,7 @@ tm_shape(resale_sf_adaptive) +
 tmap_mode("plot")
 ```
 
-## By URA Plannign Region
+## By URA Planning Region
 
 ```{r}
 tm_shape(mpsz_sf[mpsz_sf$REGION_N=="CENTRAL REGION", ])+
